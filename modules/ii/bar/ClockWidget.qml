@@ -5,6 +5,7 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property bool showHoverPopup: true
     implicitWidth: rowLayout.implicitWidth
     implicitHeight: Appearance.sizes.barHeight
 
@@ -48,10 +49,10 @@ Item {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        hoverEnabled: !Config.options.bar.tooltips.clickToShow
+        hoverEnabled: root.showHoverPopup && !Config.options.bar.tooltips.clickToShow
 
         ClockWidgetPopup {
-            hoverTarget: mouseArea
+            hoverTarget: root.showHoverPopup ? mouseArea : null
         }
     }
 }

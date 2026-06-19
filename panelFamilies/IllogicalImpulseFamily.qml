@@ -15,6 +15,7 @@ import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.overview
 import qs.modules.ii.polkit
 import qs.modules.ii.regionSelector
+import qs.modules.ii.schedulePopup
 import qs.modules.ii.screenCorners
 import qs.modules.ii.screenTranslator
 import qs.modules.ii.sessionScreen
@@ -51,6 +52,7 @@ Scope {
     PanelLoader { component: ScreenCorners {} }
     PanelLoader { component: OnScreenDisplay {} }
     PanelLoader { component: NotificationPopup {} }
+    PanelLoader { component: SchedulePopup {} }
     PanelLoader { component: Lock {} }
 
     // Tier 1 — 含全局快捷键，略延迟以让出 CPU

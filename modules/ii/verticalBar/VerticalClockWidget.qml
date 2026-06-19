@@ -51,10 +51,9 @@ Item {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        hoverEnabled: !Config.options.bar.tooltips.clickToShow
-
-        Bar.ClockWidgetPopup {
-            hoverTarget: mouseArea
+        hoverEnabled: false
+        onClicked: {
+            GlobalStates.scheduleOpen = !GlobalStates.scheduleOpen;
         }
     }
 }

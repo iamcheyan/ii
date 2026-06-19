@@ -2,9 +2,9 @@ pragma ComponentBehavior: Bound
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.services
-import qs.modules.ii.sidebarRight.calendar
-import qs.modules.ii.sidebarRight.todo
-import qs.modules.ii.sidebarRight.pomodoro
+import qs.modules.ii.schedulePopup.calendar
+import qs.modules.ii.schedulePopup.todo
+import qs.modules.ii.schedulePopup.pomodoro
 import QtQuick
 import QtQuick.Layouts
 
@@ -13,28 +13,29 @@ Rectangle {
     radius: Appearance.rounding.normal
     color: Appearance.colors.colLayer1
     clip: true
-    implicitHeight: collapsed ? collapsedBottomWidgetGroupRow.implicitHeight : 350
+    property bool popupMode: false
     property int selectedTab: Persistent.states.sidebar.bottomGroup.tab
     property int previousIndex: -1
-    property bool collapsed: Persistent.states.sidebar.bottomGroup.collapsed
+    property bool collapsed: popupMode ? false : Persistent.states.sidebar.bottomGroup.collapsed
+    implicitHeight: (!popupMode && collapsed) ? collapsedBottomWidgetGroupRow.implicitHeight : 350
     property var tabs: [
         {
             "type": "calendar",
             "name": Translation.tr("Calendar"),
             "icon": "calendar_month",
-            "widget": "calendar/CalendarWidget.qml"
+            "widget": Qt.resolvedUrl("calendar/CalendarWidget.qml")
         },
         {
             "type": "todo",
             "name": Translation.tr("To Do"),
             "icon": "done_outline",
-            "widget": "todo/TodoWidget.qml"
+            "widget": Qt.resolvedUrl("todo/TodoWidget.qml")
         },
         {
             "type": "timer",
             "name": Translation.tr("Timer"),
             "icon": "schedule",
-            "widget": "pomodoro/PomodoroWidget.qml"
+            "widget": Qt.resolvedUrl("pomodoro/PomodoroWidget.qml")
         },
     ]
 
@@ -82,8 +83,8 @@ Rectangle {
     // The thing when collapsed
     RowLayout {
         id: collapsedBottomWidgetGroupRow
+        visible: !popupMode && opacity > 0
         opacity: collapsed ? 1 : 0
-        visible: opacity > 0
         Behavior on opacity {
             NumberAnimation {
                 id: collapsedBottomWidgetGroupRowFade
@@ -173,6 +174,7 @@ Rectangle {
             }
             // Collapse button
             CalendarHeaderButton {
+                visible: !root.popupMode
                 anchors.left: parent.left
                 anchors.top: parent.top
                 forceCircle: true
@@ -206,9 +208,9 @@ Rectangle {
                 Connections {
                     target: root
                     function onSelectedTabChanged() {
-                        if (root.currentTab > root.previousIndex)
+                        if (root.selectedTab > root.previousIndex)
                             tabSwitchBehavior.animation.down = true;
-                        else if (root.currentTab < root.previousIndex)
+                        else if (root.selectedTab < root.previousIndex)
                             tabSwitchBehavior.animation.down = false;
                         tabStack.source = root.tabs[root.selectedTab].widget;
                     }

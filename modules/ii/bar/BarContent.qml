@@ -105,21 +105,23 @@ Item { // Bar content region
 
     MouseArea { // Center clock
         id: centerClock
+        z: 1
         anchors {
             top: parent.top
             bottom: parent.bottom
             horizontalCenter: parent.horizontalCenter
         }
-        implicitWidth: centerClockWidget.implicitWidth
+        width: Math.max(centerClockWidget.implicitWidth + 24, 140)
         implicitHeight: centerClockWidget.implicitHeight
 
-        onPressed: {
-            GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+        onClicked: {
+            GlobalStates.scheduleOpen = !GlobalStates.scheduleOpen;
         }
 
         ClockWidget {
             id: centerClockWidget
             anchors.verticalCenter: parent.verticalCenter
+            showHoverPopup: false
         }
     }
 
