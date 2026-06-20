@@ -55,7 +55,7 @@ Scope {
     }
 
     function navigateOverviewByIndex(delta) {
-        const model = overviewScope.overviewModel().filter(entry => !entry.isTrailingEmpty);
+        const model = overviewScope.overviewModel();
         if (model.length === 0)
             return;
 
@@ -63,6 +63,18 @@ Scope {
         let idx = overviewScope.overviewIndexForWorkspace(model, ws);
         idx = (idx + delta + model.length) % model.length;
         overviewScope.selectOverviewWorkspace(model[idx].id);
+    }
+
+    function focusedEntryIsTrailingEmpty() {
+        const wsId = overviewScope.overviewFocusedWorkspaceId();
+        if (wsId < 1)
+            return false;
+        const model = overviewScope.overviewModel();
+        for (let i = 0; i < model.length; i++) {
+            if (model[i].id === wsId)
+                return !!model[i].isTrailingEmpty;
+        }
+        return false;
     }
 
     function navigateOverviewGrid(deltaRow, deltaCol) {
@@ -99,6 +111,15 @@ Scope {
     }
 
     function commitGrabbedMode() {
+        if (overviewScope.focusedEntryIsTrailingEmpty()) {
+            // Focus a fresh empty workspace (numbers can be irregular across monitors)
+            // and automatically open the app launcher so the user can pick what to run.
+            Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);
+            overviewScope.overviewGrabbed = false;
+            GlobalStates.overviewOpen = false;
+            GlobalStates.appLauncherOpen = true;
+            return;
+        }
         if (GlobalStates.overviewFocusedWorkspaceId > 0)
             overviewScope.dispatchFocusWorkspace(GlobalStates.overviewFocusedWorkspaceId);
         overviewScope.overviewGrabbed = false;
