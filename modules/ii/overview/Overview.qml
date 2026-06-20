@@ -311,9 +311,7 @@ Scope {
         color: "transparent"
 
         mask: Region {
-            item: GlobalStates.overviewOpen
-                ? (GlobalStates.overviewAltTabMode ? altTabKeyHandler : columnLayout)
-                : null
+            item: GlobalStates.overviewOpen ? columnLayout : null
         }
 
         anchors {
