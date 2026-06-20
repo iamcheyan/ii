@@ -45,7 +45,7 @@ Scope {
     function dispatchFocusWorkspace(wsId) {
         if (wsId < 1)
             return;
-        Quickshell.execDetached(["hyprctl", "dispatch", "workspace", "" + wsId]);
+        Hyprland.dispatch(`hl.dsp.focus({ workspace = ${wsId} })`);
     }
 
     function focusOverviewWorkspace(wsId) {
