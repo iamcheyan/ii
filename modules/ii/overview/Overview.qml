@@ -373,17 +373,13 @@ Scope {
             Keys.onPressed: event => overviewScope.handleAltTabKeyPressed(event)
             Keys.onReleased: event => overviewScope.handleAltTabKeyReleased(event)
 
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-                hoverEnabled: false
-
-                onWheel: wheel => {
-                    if (wheel.angleDelta.y > 0)
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => {
+                    if (event.angleDelta.y > 0)
                         overviewScope.openAltTabModeFromWheel(-1);
-                    else if (wheel.angleDelta.y < 0)
+                    else if (event.angleDelta.y < 0)
                         overviewScope.openAltTabModeFromWheel(1);
-                    wheel.accepted = true;
                 }
             }
 
