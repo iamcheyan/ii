@@ -230,23 +230,73 @@ Item { // Bar content region
                         }
                     }
                     MaterialSymbol {
-                        text: Network.materialSymbol
-                        iconSize: Appearance.font.pixelSize.larger
-                        color: rightSidebarButton.colText
-                    }
-                    MaterialSymbol {
-                        Layout.leftMargin: indicatorsRowLayout.realSpacing
-                        visible: BluetoothStatus.available
-                        text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
+                        text: "power_settings_new"
                         iconSize: Appearance.font.pixelSize.larger
                         color: rightSidebarButton.colText
                     }
                 }
             }
 
+            CircleUtilButton {
+                visible: root.useShortenedForm === 0
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.fillHeight: true
+                onClicked: {
+                    GlobalStates.barDialogType = "bluetooth";
+                    GlobalStates.barDialogOpen = true;
+                }
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    fill: 1
+                    text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: Appearance.colors.colOnLayer0
+                }
+            }
+
+            CircleUtilButton {
+                visible: root.useShortenedForm === 0
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.fillHeight: true
+                onClicked: {
+                    GlobalStates.barDialogType = "wifi";
+                    GlobalStates.barDialogOpen = true;
+                }
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    fill: 1
+                    text: Network.materialSymbol
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: Appearance.colors.colOnLayer0
+                }
+            }
+
+            CircleUtilButton {
+                visible: root.useShortenedForm === 0
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.fillHeight: true
+                onClicked: {
+                    GlobalStates.barDialogType = "clipboard";
+                    GlobalStates.barDialogOpen = true;
+                }
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    fill: 1
+                    text: "content_paste"
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: Appearance.colors.colOnLayer0
+                }
+            }
+
             UtilButtons {
                 visible: (Config.options.bar.verbose && root.useShortenedForm === 0)
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+            }
+
+            BatteryIndicator {
+                visible: Battery.available && root.useShortenedForm === 0
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.fillHeight: true
             }
 
             Media {

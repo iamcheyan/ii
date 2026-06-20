@@ -611,5 +611,9 @@
   "Use varying shapes for password characters": "Use varying shapes for password characters",
   "Battery full": "Battery full",
   "Pin": "Pin",
-  "Unpin": "Unpin"
+  "Unpin": "Unpin",
+  "截取部分": "Region Screenshot",
+  "截取全屏": "Full Screen Screenshot",
+  "取色": "Color Picker",
+  "录屏": "Screen Recording"
 }

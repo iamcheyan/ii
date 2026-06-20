@@ -253,14 +253,7 @@ Item { // Bar content region
                         }
                     }
                     MaterialSymbol {
-                        text: Network.materialSymbol
-                        iconSize: Appearance.font.pixelSize.larger
-                        color: rightSidebarButton.colText
-                    }
-                    MaterialSymbol {
-                        Layout.topMargin: indicatorsColumnLayout.realSpacing
-                        visible: BluetoothStatus.available
-                        text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
+                        text: "power_settings_new"
                         iconSize: Appearance.font.pixelSize.larger
                         color: rightSidebarButton.colText
                     }

@@ -32,6 +32,9 @@ Singleton {
     property bool superReleaseMightTrigger: true
     property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
+    property string sidebarRightAutoDialog: ""
+    property bool barDialogOpen: false
+    property string barDialogType: ""
 
     onSidebarRightOpenChanged: {
         if (GlobalStates.sidebarRightOpen) {

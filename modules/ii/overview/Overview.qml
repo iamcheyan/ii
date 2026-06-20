@@ -289,7 +289,7 @@ Scope {
             visible: GlobalStates.overviewOpen
             anchors {
                 horizontalCenter: parent.horizontalCenter
-                top: parent.top
+                verticalCenter: parent.verticalCenter
             }
             spacing: -8
 
@@ -306,17 +306,30 @@ Scope {
                 }
             }
 
-            Loader {
-                id: overviewLoader
+            StyledFlickable {
+                id: overviewScroll
                 anchors.horizontalCenter: parent.horizontalCenter
-                active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
-                sourceComponent: OverviewWidget {
-                    screen: panelWindow.screen
-                    visible: (panelWindow.searchingText == "")
+                clip: true
+                visible: (panelWindow.searchingText == "")
+                readonly property real availableHeight: panelWindow.height * 0.85 - searchWidget.implicitHeight
+                implicitWidth: overviewLoader.implicitWidth
+                implicitHeight: visible
+                    ? Math.min(overviewLoader.implicitHeight, Math.max(0, availableHeight))
+                    : 0
+                width: implicitWidth
+                height: implicitHeight
+                contentWidth: width
+                contentHeight: overviewLoader.implicitHeight
+
+                Loader {
+                    id: overviewLoader
+                    active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
+                    sourceComponent: OverviewWidget {
+                        screen: panelWindow.screen
+                        visible: (panelWindow.searchingText == "")
+                    }
                 }
             }
-
-
         }
     }
 

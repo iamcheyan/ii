@@ -12,47 +12,35 @@ MouseArea {
     readonly property bool isPluggedIn: Battery.isPluggedIn
     readonly property real percentage: Battery.percentage
     readonly property bool isLow: percentage <= Config.options.battery.low / 100
+    readonly property color colIcon: (isLow && !isCharging) ? Appearance.m3colors.m3error : Appearance.colors.colOnLayer0
 
-    implicitWidth: batteryProgress.implicitWidth
+    implicitWidth: rowLayout.implicitWidth + 10 * 2
     implicitHeight: Appearance.sizes.barHeight
 
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
 
-    ClippedProgressBar {
-        id: batteryProgress
+    RowLayout {
+        id: rowLayout
         anchors.centerIn: parent
-        value: percentage
-        highlightColor: (isLow && !isCharging) ? Appearance.m3colors.m3error : Appearance.colors.colOnSecondaryContainer
+        spacing: 4
 
-        Item {
-            anchors.centerIn: parent
-            width: batteryProgress.valueBarWidth
-            height: batteryProgress.valueBarHeight
+        MaterialSymbol {
+            Layout.alignment: Qt.AlignVCenter
+            fill: 1
+            text: isCharging ? "battery_charging_full" : Icons.getBatteryIcon(Battery.percentage * 100)
+            iconSize: Appearance.font.pixelSize.larger
+            color: root.colIcon
+            animateChange: true
+        }
 
-            RowLayout {
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    bottom: parent.bottom
-                    bottomMargin: (parent.height - height) / 2
-                }
-                spacing: 0
-
-                MaterialSymbol {
-                    id: boltIcon
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.leftMargin: -2
-                    Layout.rightMargin: -2
-                    fill: 1
-                    text: "bolt"
-                    iconSize: Appearance.font.pixelSize.smaller
-                    visible: isCharging && percentage < 1 // TODO: animation
-                }
-                StyledText {
-                    Layout.alignment: Qt.AlignVCenter
-                    font: batteryProgress.font
-                    text: batteryProgress.text
-                }
+        StyledText {
+            Layout.alignment: Qt.AlignVCenter
+            font {
+                pixelSize: Appearance.font.pixelSize.small
+                weight: Font.DemiBold
             }
+            color: root.colIcon
+            text: `${Math.round(percentage * 100)}%`
         }
     }
 

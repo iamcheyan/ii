@@ -13,13 +13,13 @@ Scope {
     id: screenCorners
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
     property var actionForCorner: ({
-        [RoundCorner.CornerEnum.TopLeft]: () => GlobalStates.appLauncherOpen = !GlobalStates.appLauncherOpen,
+        [RoundCorner.CornerEnum.TopLeft]: () => GlobalStates.overviewOpen = !GlobalStates.overviewOpen,
         [RoundCorner.CornerEnum.BottomLeft]: () => {},
-        [RoundCorner.CornerEnum.TopRight]: () => GlobalStates.overviewOpen = !GlobalStates.overviewOpen,
+        [RoundCorner.CornerEnum.TopRight]: () => GlobalStates.appLauncherOpen = !GlobalStates.appLauncherOpen,
         [RoundCorner.CornerEnum.BottomRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
     })
 
-    // Dedicated hot corners for top-left (AppLauncher) and top-right (Overview)
+    // Dedicated hot corners for top-left (Overview) and top-right (AppLauncher)
     // Independent of sidebar.cornerOpen config
     component TopCornerHotspot: PanelWindow {
         id: hotspot
@@ -49,14 +49,14 @@ Scope {
         Connections {
             target: GlobalStates
             function onOverviewOpenChanged() {
-                if (hotspot.isRight && !GlobalStates.overviewOpen) {
+                if (!hotspot.isRight && !GlobalStates.overviewOpen) {
                     hotspot.triggered = false;
                     hotspot.cooldown = true;
                     cooldownTimer.restart();
                 }
             }
             function onAppLauncherOpenChanged() {
-                if (!hotspot.isRight && !GlobalStates.appLauncherOpen) {
+                if (hotspot.isRight && !GlobalStates.appLauncherOpen) {
                     hotspot.triggered = false;
                     hotspot.cooldown = true;
                     cooldownTimer.restart();
@@ -72,9 +72,9 @@ Scope {
                 if (hotspot.triggered || hotspot.cooldown) return;
                 hotspot.triggered = true;
                 if (hotspot.isRight)
-                    GlobalStates.overviewOpen = true;
-                else
                     GlobalStates.appLauncherOpen = true;
+                else
+                    GlobalStates.overviewOpen = true;
             }
             onExited: {
                 hotspot.triggered = false;

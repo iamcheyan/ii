@@ -23,31 +23,65 @@ Item {
         Loader {
             active: Config.options.bar.utilButtons.showScreenSnip
             visible: Config.options.bar.utilButtons.showScreenSnip
-            sourceComponent: CircleUtilButton {
+            sourceComponent: Item {
                 Layout.alignment: Qt.AlignVCenter
-                onClicked: Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "screenshot"]);
+                implicitWidth: screenshotButton.implicitWidth
+                implicitHeight: screenshotButton.implicitHeight
+
+                RippleButton {
+                    id: screenshotButton
+                    anchors.centerIn: parent
+                    buttonRadius: Appearance.rounding.full
+                    colBackground: ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
+                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
+                    colRipple: ColorUtils.transparentize(Appearance.colors.colLayer1Active, 1)
+
+                    onClicked: {
+                        Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "region", "screenshot"]);
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    onPressed: (event) => {
+                        if (event.button === Qt.RightButton) {
+                            screenshotMenu.open();
+                        }
+                    }
+                }
+
                 MaterialSymbol {
+                    anchors.centerIn: screenshotButton
                     horizontalAlignment: Qt.AlignHCenter
                     fill: 1
                     text: "screenshot_region"
                     iconSize: Appearance.font.pixelSize.large
                     color: Appearance.colors.colOnLayer2
                 }
-            }
-        }
 
-        Loader {
-            active: Config.options.bar.utilButtons.showScreenRecord
-            visible: Config.options.bar.utilButtons.showScreenRecord
-            sourceComponent: CircleUtilButton {
-                Layout.alignment: Qt.AlignVCenter
-                onClicked: Quickshell.execDetached([Directories.recordScriptPath])
-                MaterialSymbol {
-                    horizontalAlignment: Qt.AlignHCenter
-                    fill: 1
-                    text: "videocam"
-                    iconSize: Appearance.font.pixelSize.large
-                    color: Appearance.colors.colOnLayer2
+                Loader {
+                    id: screenshotMenu
+                    function open() {
+                        screenshotMenu.active = true;
+                    }
+                    active: false
+                    sourceComponent: ScreenshotContextMenu {
+                        Component.onCompleted: this.open();
+                        anchor {
+                            window: screenshotButton.QsWindow.window
+                            item: screenshotButton
+                            gravity: Config.options.bar.vertical
+                                ? (Config.options.bar.bottom ? Edges.Left : Edges.Right)
+                                : (Config.options.bar.bottom ? Edges.Top : Edges.Bottom)
+                            edges: Config.options.bar.vertical
+                                ? (Config.options.bar.bottom ? Edges.Left : Edges.Right)
+                                : (Config.options.bar.bottom ? Edges.Top : Edges.Bottom)
+                        }
+                        onMenuClosed: {
+                            screenshotMenu.active = false;
+                        }
+                    }
                 }
             }
         }

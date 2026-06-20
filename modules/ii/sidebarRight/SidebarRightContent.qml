@@ -39,6 +39,14 @@ Item {
                 root.showAudioInputDialog = false;
             }
         }
+        function onSidebarRightAutoDialogChanged() {
+            if (GlobalStates.sidebarRightAutoDialog === "bluetooth") {
+                root.showBluetoothDialog = true;
+            } else if (GlobalStates.sidebarRightAutoDialog === "wifi") {
+                root.showWifiDialog = true;
+            }
+            GlobalStates.sidebarRightAutoDialog = "";
+        }
     }
 
     implicitHeight: sidebarRightBackground.implicitHeight

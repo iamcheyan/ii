@@ -89,6 +89,12 @@ Scope {
         loadTier: 1
         tier1Ready: family.tier1Ready
         tier2Ready: family.tier2Ready
+        component: BarDialogOverlay {}
+    }
+    PanelLoader {
+        loadTier: 1
+        tier1Ready: family.tier1Ready
+        tier2Ready: family.tier2Ready
         component: OnScreenKeyboard {}
     }
     PanelLoader {
