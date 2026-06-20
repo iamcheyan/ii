@@ -125,7 +125,7 @@ Item { // Bar content region
         }
     }
 
-    FocusedScrollMouseArea { // Right side | scroll to change volume
+    FocusedScrollMouseArea { // Right side
         id: barRightSideMouseArea
 
         anchors {
@@ -137,9 +137,6 @@ Item { // Bar content region
         implicitWidth: rightSectionRowLayout.implicitWidth
         implicitHeight: Appearance.sizes.baseBarHeight
 
-        onScrollDown: Audio.decrementVolume();
-        onScrollUp: Audio.incrementVolume();
-        onMovedAway: GlobalStates.osdVolumeOpen = false;
         onPressed: event => {
             if (event.button === Qt.LeftButton) {
                 GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
@@ -147,14 +144,6 @@ Item { // Bar content region
         }
 
         // Visual content
-        ScrollHint {
-            reveal: barRightSideMouseArea.hovered
-            icon: "volume_up"
-            tooltipText: Translation.tr("Scroll to change volume")
-            side: "right"
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-        }
 
         RowLayout {
             id: rightSectionRowLayout
