@@ -68,6 +68,7 @@ Item {
 
     property int draggingFromWorkspace: -1
     property int draggingTargetWorkspace: -1
+    property bool draggingTargetIsTrailing: false
 
     implicitWidth: overviewBackground.implicitWidth + Appearance.sizes.elevationMargin * 2
     implicitHeight: overviewBackground.implicitHeight + Appearance.sizes.elevationMargin * 2
@@ -216,6 +217,9 @@ Item {
                                 if (GlobalStates.overviewAltTabMode) {
                                     GlobalStates.overviewAltTabSelectedWorkspaceId = workspace.workspaceValue;
                                     Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspace.workspaceValue} })`);
+                                } else if (workspace.isTrailingEmpty) {
+                                    GlobalStates.overviewOpen = false;
+                                    Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);
                                 } else {
                                     GlobalStates.overviewOpen = false;
                                     Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspace.workspaceValue} })`);
@@ -228,12 +232,16 @@ Item {
                         anchors.fill: parent
                         onEntered: {
                             root.draggingTargetWorkspace = workspace.workspaceValue
+                            root.draggingTargetIsTrailing = workspace.isTrailingEmpty
                             if (root.draggingFromWorkspace == root.draggingTargetWorkspace) return;
                             hoveredWhileDragging = true
                         }
                         onExited: {
                             hoveredWhileDragging = false
-                            if (root.draggingTargetWorkspace == workspace.workspaceValue) root.draggingTargetWorkspace = -1
+                            if (root.draggingTargetWorkspace == workspace.workspaceValue) {
+                                root.draggingTargetWorkspace = -1
+                                root.draggingTargetIsTrailing = false
+                            }
                         }
                     }
                 }
@@ -350,11 +358,16 @@ Item {
                         }
                         onReleased: {
                             const targetWorkspace = root.draggingTargetWorkspace
+                            const targetIsTrailing = root.draggingTargetIsTrailing
                             window.pressed = false
                             window.Drag.active = false
                             root.draggingFromWorkspace = -1
                             if (targetWorkspace !== -1 && targetWorkspace !== windowData?.workspace.id) {
-                                Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${targetWorkspace}, follow = false, window = "address:${window.windowData?.address}" })`)
+                                if (targetIsTrailing) {
+                                    Hyprland.dispatch(`hl.dsp.window.move({ workspace = "empty", follow = false, window = "address:${window.windowData?.address}" })`)
+                                } else {
+                                    Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${targetWorkspace}, follow = false, window = "address:${window.windowData?.address}" })`)
+                                }
                                 updateWindowPosition.restart()
                             }
                             else {

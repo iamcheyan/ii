@@ -54,7 +54,7 @@ Singleton {
         if (!monitorName)
             return [];
         return root.workspaces
-            .filter(ws => ws.monitor === monitorName && root.isRegularWorkspace(ws))
+            .filter(ws => ws.monitor === monitorName && root.isRegularWorkspace(ws) && ws.windows > 0)
             .map(ws => ws.id)
             .sort((a, b) => a - b);
     }
