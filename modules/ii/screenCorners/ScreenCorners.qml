@@ -19,6 +19,33 @@ Scope {
         [RoundCorner.CornerEnum.BottomRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
     })
 
+    // Dedicated hot corners for top-left (AppLauncher) and top-right (Overview)
+    // Independent of sidebar.cornerOpen config
+    component TopCornerHotspot: PanelWindow {
+        id: hotspot
+        property bool isRight: false
+        property bool fullscreen: false
+        visible: !fullscreen
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.namespace: "quickshell:screenCorners"
+        WlrLayershell.layer: WlrLayer.Overlay
+        color: "transparent"
+        anchors.top: true
+        anchors.left: !isRight
+        anchors.right: isRight
+        implicitWidth: 200
+        implicitHeight: 4
+        mask: Region { item: hotspotArea }
+        MouseArea {
+            id: hotspotArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onEntered: isRight
+                ? (GlobalStates.overviewOpen = !GlobalStates.overviewOpen)
+                : (GlobalStates.appLauncherOpen = !GlobalStates.appLauncherOpen)
+        }
+    }
+
     component CornerPanelWindow: PanelWindow {
         id: cornerPanelWindow
         property var brightnessMonitor: Brightness.getMonitorForScreen(screen)
@@ -167,6 +194,16 @@ Scope {
             CornerPanelWindow {
                 screen: modelData
                 corner: RoundCorner.CornerEnum.BottomRight
+                fullscreen: monitorScope.fullscreen
+            }
+            TopCornerHotspot {
+                screen: modelData
+                isRight: false
+                fullscreen: monitorScope.fullscreen
+            }
+            TopCornerHotspot {
+                screen: modelData
+                isRight: true
                 fullscreen: monitorScope.fullscreen
             }
         }
