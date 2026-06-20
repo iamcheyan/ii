@@ -272,7 +272,7 @@ Scope {
         if (!GlobalStates.overviewAltTabMode || !GlobalStates.overviewOpen)
             return;
 
-        if (event.key === Qt.Key_Alt || event.key === Qt.Key_AltGr) {
+        if (event.key === Qt.Key_Alt || event.key === Qt.Key_Alt_L || event.key === Qt.Key_Alt_R) {
             overviewScope.commitAltTab();
             event.accepted = true;
         }
@@ -305,9 +305,9 @@ Scope {
 
         WlrLayershell.namespace: "quickshell:overview"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: GlobalStates.overviewAltTabMode
-            ? WlrKeyboardFocus.Exclusive
-            : (GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
+        WlrLayershell.keyboardFocus: GlobalStates.overviewOpen
+            ? WlrKeyboardFocus.OnDemand
+            : WlrKeyboardFocus.None
         color: "transparent"
 
         mask: Region {
