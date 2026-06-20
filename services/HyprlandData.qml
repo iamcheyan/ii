@@ -37,6 +37,73 @@ Singleton {
         return root.windowList.filter(win => win.workspace.id === workspace);
     }
 
+    function workspaceHasVisibleWindows(workspaceId) {
+        if (workspaceId < 1)
+            return false;
+        return root.hyprlandClientsForWorkspace(workspaceId).some(
+            win => win.mapped && !win.hidden
+        );
+    }
+
+    function workspaceGroupBase(workspaceId, groupSize) {
+        const size = groupSize > 0 ? groupSize : 10;
+        return Math.floor((Math.max(workspaceId, 1) - 1) / size) * size;
+    }
+
+    function workspaceIdsOnMonitor(monitorName) {
+        if (!monitorName)
+            return [];
+        return root.workspaces
+            .filter(ws => ws.monitor === monitorName && root.isRegularWorkspace(ws))
+            .map(ws => ws.id)
+            .sort((a, b) => a - b);
+    }
+
+    function isRegularWorkspace(ws) {
+        if (!ws?.name)
+            return true;
+        return !ws.name.startsWith("special:");
+    }
+
+    // Per-monitor overview: existing workspaces + one trailing empty slot
+    function overviewWorkspaceEntriesOnMonitor(monitorName) {
+        if (!monitorName)
+            return [{ id: 1, isTrailingEmpty: true }];
+
+        const ids = root.workspaceIdsOnMonitor(monitorName);
+        const model = ids.map(id => ({ id, isTrailingEmpty: false }));
+
+        if (model.length === 0) {
+            const monitorData = root.monitors.find(m => m.name === monitorName);
+            const activeId = monitorData?.activeWorkspace?.id ?? 0;
+            if (activeId >= 1 && activeId <= 100)
+                model.push({ id: activeId, isTrailingEmpty: false });
+            else
+                model.push({ id: 1, isTrailingEmpty: false });
+        }
+
+        let maxId = 0;
+        for (const entry of model)
+            maxId = Math.max(maxId, entry.id);
+
+        const trailingId = maxId + 1;
+        if (trailingId <= 100 && !ids.includes(trailingId))
+            model.push({ id: trailingId, isTrailingEmpty: true });
+
+        return model;
+    }
+
+    function workspaceDataForId(workspaceId) {
+        return root.workspaceById[workspaceId] ?? null;
+    }
+
+    function workspaceBelongsToMonitor(workspaceId, monitorName) {
+        if (!monitorName || workspaceId < 1)
+            return false;
+        const ws = root.workspaceById[workspaceId];
+        return ws !== undefined && ws.monitor === monitorName;
+    }
+
     function clientForToplevel(toplevel) {
         if (!toplevel || !toplevel.HyprlandToplevel) {
             return null;

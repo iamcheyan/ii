@@ -19,6 +19,10 @@ Singleton {
     property bool oskOpen: false
     property bool overlayOpen: false
     property bool overviewOpen: false
+    property bool overviewAltTabMode: false
+    property int overviewAltTabOriginalWorkspaceId: -1
+    property int overviewAltTabSelectedWorkspaceId: -1
+    property int overviewFocusedWorkspaceId: -1
     property bool regionSelectorOpen: false
     property bool scheduleOpen: false
     property bool searchOpen: false
