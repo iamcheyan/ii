@@ -14,35 +14,14 @@ import Quickshell.Hyprland
 Item {
     id: root
     required property var screen
-    property var altTabCycler: null
-    property var altTabCommitter: null
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property var toplevels: ToplevelManager.toplevels
     // Clamp to avoid lock-screen temp workspace (2147483647 - N) leaking into UI
     readonly property int effectiveActiveWorkspaceId: Math.max(1, Math.min(100, monitor?.activeWorkspace?.id ?? 1))
-    readonly property int highlightedWorkspaceId: GlobalStates.overviewAltTabMode
-        ? Math.max(1, GlobalStates.overviewAltTabSelectedWorkspaceId)
-        : (GlobalStates.overviewFocusedWorkspaceId > 0
-            ? GlobalStates.overviewFocusedWorkspaceId
-            : effectiveActiveWorkspaceId)
-    readonly property var overviewEntries: {
-        if (GlobalStates.overviewAltTabMode) {
-            const ids = HyprlandData.workspaceIdsOnMonitor(root.monitor?.name);
-            const entries = [];
-            for (const id of ids) {
-                if (id === root.highlightedWorkspaceId || HyprlandData.workspaceHasVisibleWindows(id))
-                    entries.push({ id, isTrailingEmpty: false });
-            }
-            let maxId = 0;
-            for (const e of entries) maxId = Math.max(maxId, e.id);
-            if (maxId === 0) maxId = root.effectiveActiveWorkspaceId;
-            const trailingId = maxId + 1;
-            if (trailingId <= 100)
-                entries.push({ id: trailingId, isTrailingEmpty: true });
-            return entries;
-        }
-        return HyprlandData.overviewWorkspaceEntriesOnMonitor(root.monitor?.name);
-    }
+    readonly property int highlightedWorkspaceId: (GlobalStates.overviewFocusedWorkspaceId > 0
+        ? GlobalStates.overviewFocusedWorkspaceId
+        : effectiveActiveWorkspaceId)
+    readonly property var overviewEntries: HyprlandData.overviewWorkspaceEntriesOnMonitor(root.monitor?.name)
     readonly property var overviewEntryIds: root.overviewEntries.map(entry => entry.id)
     readonly property int overviewGridColumns: Math.min(
         Math.max(root.overviewEntries.length, 1),
@@ -82,7 +61,6 @@ Item {
     implicitHeight: overviewBackground.implicitHeight + Appearance.sizes.elevationMargin * 2
 
     readonly property bool overviewNavigationActive: GlobalStates.overviewOpen
-        && !GlobalStates.overviewAltTabMode
 
     function indexForWorkspaceId(wsId) {
         for (let i = 0; i < root.overviewEntries.length; ++i) {
@@ -144,19 +122,12 @@ Item {
             anchors.fill: parent
             z: -1
             acceptedButtons: Qt.NoButton
-            enabled: root.overviewNavigationActive || GlobalStates.overviewAltTabMode
+            enabled: root.overviewNavigationActive
             onWheel: wheel => {
-                if (GlobalStates.overviewAltTabMode) {
-                    if (wheel.angleDelta.y > 0)
-                        root.altTabCycler && root.altTabCycler(-1);
-                    else if (wheel.angleDelta.y < 0)
-                        root.altTabCycler && root.altTabCycler(1);
-                } else {
-                    if (wheel.angleDelta.y > 0)
-                        root.cycleOverviewWorkspace(-1);
-                    else if (wheel.angleDelta.y < 0)
-                        root.cycleOverviewWorkspace(1);
-                }
+                if (wheel.angleDelta.y > 0)
+                    root.cycleOverviewWorkspace(-1);
+                else if (wheel.angleDelta.y < 0)
+                    root.cycleOverviewWorkspace(1);
                 wheel.accepted = true;
             }
         }
@@ -219,13 +190,7 @@ Item {
                         anchors.fill: parent
                         acceptedButtons: Qt.LeftButton
                         onWheel: wheel => {
-                            if (GlobalStates.overviewAltTabMode) {
-                                if (wheel.angleDelta.y > 0)
-                                    root.altTabCycler && root.altTabCycler(-1);
-                                else if (wheel.angleDelta.y < 0)
-                                    root.altTabCycler && root.altTabCycler(1);
-                                wheel.accepted = true;
-                            } else if (root.overviewNavigationActive) {
+                            if (root.overviewNavigationActive) {
                                 if (wheel.angleDelta.y > 0)
                                     root.cycleOverviewWorkspace(-1);
                                 else if (wheel.angleDelta.y < 0)
@@ -235,11 +200,7 @@ Item {
                         }
                         onPressed: {
                             if (root.draggingTargetWorkspace === -1) {
-                                if (GlobalStates.overviewAltTabMode) {
-                                    GlobalStates.overviewAltTabSelectedWorkspaceId = workspace.workspaceValue;
-                                    Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspace.workspaceValue} })`);
-                                    if (root.altTabCommitter) root.altTabCommitter();
-                                } else if (workspace.isTrailingEmpty) {
+                                if (workspace.isTrailingEmpty) {
                                     GlobalStates.overviewOpen = false;
                                     Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);
                                 } else {
@@ -361,13 +322,7 @@ Item {
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                         drag.target: parent
                         onWheel: wheel => {
-                            if (GlobalStates.overviewAltTabMode) {
-                                if (wheel.angleDelta.y > 0)
-                                    root.altTabCycler && root.altTabCycler(-1);
-                                else if (wheel.angleDelta.y < 0)
-                                    root.altTabCycler && root.altTabCycler(1);
-                                wheel.accepted = true;
-                            } else if (root.overviewNavigationActive) {
+                            if (root.overviewNavigationActive) {
                                 if (wheel.angleDelta.y > 0)
                                     root.cycleOverviewWorkspace(-1);
                                 else if (wheel.angleDelta.y < 0)
@@ -412,9 +367,6 @@ Item {
                             if (!windowData) return;
 
                             if (event.button === Qt.LeftButton) {
-                                GlobalStates.overviewAltTabMode = false;
-                                GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
-                                GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
                                 GlobalStates.overviewOpen = false;
                                 Hyprland.dispatch(`hl.dsp.focus({window = "address:${windowData.address}"})`);
                                 event.accepted = true;

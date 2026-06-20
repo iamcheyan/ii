@@ -14,14 +14,11 @@ import Quickshell.Hyprland
 Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
-    property real lastAltTabWheelCycleMs: 0
-    property int altTabWheelThrottleMs: 160
 
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
         ?? Quickshell.screens[0]
         ?? null
 
-    signal requestAltTabFocus()
     signal requestOverviewFocus()
 
     function overviewModelForFocusedMonitor() {
@@ -91,7 +88,6 @@ Scope {
 
     function overviewNavigationActive() {
         return GlobalStates.overviewOpen
-            && !GlobalStates.overviewAltTabMode
             && panelWindow.searchingText === "";
     }
 
@@ -138,160 +134,11 @@ Scope {
         return Hyprland.focusedMonitor?.name ?? "";
     }
 
-    // Alt+Tab: only cycle workspaces that exist on the focused monitor
-    function workspaceCycleList() {
-        const onMonitor = HyprlandData.workspaceIdsOnMonitor(overviewScope.focusedMonitorName());
-        const ids = onMonitor.length > 0 ? onMonitor : (() => {
-            const currentWs = overviewScope.currentWorkspaceId();
-            return currentWs > 0 ? [currentWs] : [1];
-        })();
-        let maxId = 0;
-        for (const id of ids) maxId = Math.max(maxId, id);
-        if (maxId === 0) maxId = overviewScope.currentWorkspaceId();
-        const trailingId = maxId + 1;
-        return trailingId <= 100 ? [...ids, trailingId] : ids;
-    }
-
-    function altTabTrailingId() {
-        const list = overviewScope.workspaceCycleList();
-        if (list.length === 0) return -1;
-        const last = list[list.length - 1];
-        return HyprlandData.workspaceById[last] === undefined ? last : -1;
-    }
-
-    function focusWorkspace(wsId) {
-        if (wsId < 1)
-            return;
-        GlobalStates.overviewAltTabSelectedWorkspaceId = wsId;
-        if (wsId === overviewScope.altTabTrailingId()) {
-            Qt.callLater(overviewScope.syncOverviewScreen);
-            return;
-        }
-        overviewScope.dispatchFocusWorkspace(wsId);
-        Qt.callLater(overviewScope.syncOverviewScreen);
-    }
-
-    function setAltTabSubmap(active) {
-        Hyprland.dispatch(`hl.dsp.submap("${active ? "overview-alt-tab" : "reset"}")`);
-    }
-
-    function cycleAltTabWorkspace(dir) {
-        const list = overviewScope.workspaceCycleList();
-        if (list.length === 0)
-            return;
-
-        let idx = list.indexOf(GlobalStates.overviewAltTabSelectedWorkspaceId);
-        if (idx < 0)
-            idx = list.indexOf(overviewScope.currentWorkspaceId());
-        if (idx < 0)
-            idx = 0;
-
-        idx = (idx + dir + list.length) % list.length;
-        overviewScope.focusWorkspace(list[idx]);
-    }
-
-    function openAltTabMode(initialDir) {
-        const dir = initialDir === 0 ? 1 : initialDir;
-
-        if (GlobalStates.overviewAltTabMode && GlobalStates.overviewOpen) {
-            overviewScope.cycleAltTabWorkspace(dir);
-        } else {
-            const currentWs = overviewScope.currentWorkspaceId();
-            overviewScope.syncOverviewScreen();
-            overviewScope.dontAutoCancelSearch = true;
-            GlobalStates.overviewAltTabMode = true;
-            GlobalStates.overviewAltTabOriginalWorkspaceId = currentWs;
-            GlobalStates.overviewAltTabSelectedWorkspaceId = currentWs;
-            GlobalStates.overviewOpen = true;
-            overviewScope.setAltTabSubmap(true);
-            Qt.callLater(() => overviewScope.cycleAltTabWorkspace(dir));
-        }
-
-        overviewScope.requestAltTabFocus();
-        Qt.callLater(() => overviewScope.requestAltTabFocus());
-    }
-
-    function openAltTabModeFromWheel(initialDir) {
-        const now = Date.now();
-        if (now - overviewScope.lastAltTabWheelCycleMs < overviewScope.altTabWheelThrottleMs)
-            return;
-        overviewScope.lastAltTabWheelCycleMs = now;
-        overviewScope.openAltTabMode(initialDir);
-    }
-
-    function commitAltTab() {
-        if (!GlobalStates.overviewAltTabMode) {
-            overviewScope.setAltTabSubmap(false);
-            return;
-        }
-        const selected = GlobalStates.overviewAltTabSelectedWorkspaceId;
-        const isTrailing = selected > 0 && HyprlandData.workspaceById[selected] === undefined;
-        GlobalStates.overviewAltTabMode = false;
-        GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
-        GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
-        GlobalStates.overviewOpen = false;
-        overviewScope.setAltTabSubmap(false);
-        if (isTrailing)
-            Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);
-    }
-
-    function cancelAltTab() {
-        if (!GlobalStates.overviewAltTabMode) {
-            overviewScope.setAltTabSubmap(false);
-            GlobalStates.overviewOpen = false;
-            return;
-        }
-        const originalWs = GlobalStates.overviewAltTabOriginalWorkspaceId;
-        GlobalStates.overviewAltTabMode = false;
-        GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
-        GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
-        GlobalStates.overviewOpen = false;
-        overviewScope.setAltTabSubmap(false);
-        if (originalWs > 0)
-            overviewScope.dispatchFocusWorkspace(originalWs);
-    }
-
-    function handleAltTabKeyPressed(event) {
-        if (!GlobalStates.overviewAltTabMode || !GlobalStates.overviewOpen)
-            return;
-
-        if (event.key === Qt.Key_Tab) {
-            const backward = (event.modifiers & Qt.ShiftModifier) !== 0;
-            overviewScope.cycleAltTabWorkspace(backward ? -1 : 1);
-            event.accepted = true;
-            return;
-        }
-
-        if (event.key === Qt.Key_Escape) {
-            overviewScope.cancelAltTab();
-            event.accepted = true;
-        }
-    }
-
-    function handleAltTabKeyReleased(event) {
-        if (!GlobalStates.overviewAltTabMode || !GlobalStates.overviewOpen)
-            return;
-
-        if (event.key === Qt.Key_Alt || event.key === Qt.Key_Alt_L || event.key === Qt.Key_Alt_R) {
-            overviewScope.commitAltTab();
-            event.accepted = true;
-        }
-    }
-
     Connections {
         target: Hyprland
         function onFocusedMonitorChanged() {
             if (GlobalStates.overviewOpen)
                 overviewScope.syncOverviewScreen();
-        }
-    }
-
-    Connections {
-        target: HyprlandData
-        function onActiveWorkspaceChanged() {
-            if (!GlobalStates.overviewAltTabMode || !HyprlandData.activeWorkspace?.id)
-                return;
-            // Don't overwrite — cycleAltTabWorkspace manages selectedWorkspaceId
         }
     }
 
@@ -325,10 +172,6 @@ Scope {
             target: GlobalStates
             function onOverviewOpenChanged() {
                 if (!GlobalStates.overviewOpen) {
-                    overviewScope.setAltTabSubmap(false);
-                    GlobalStates.overviewAltTabMode = false;
-                    GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
-                    GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
                     GlobalStates.overviewFocusedWorkspaceId = -1;
                     searchWidget.disableExpandAnimation();
                     overviewScope.dontAutoCancelSearch = false;
@@ -336,11 +179,9 @@ Scope {
                 } else {
                     searchWidget.cancelSearch();
                     overviewScope.syncOverviewScreen();
-                    if (!GlobalStates.overviewAltTabMode) {
-                        GlobalStates.overviewFocusedWorkspaceId = overviewScope.currentWorkspaceId();
-                        GlobalFocusGrab.addDismissable(panelWindow);
-                        Qt.callLater(() => overviewScope.requestOverviewFocus());
-                    }
+                    GlobalStates.overviewFocusedWorkspaceId = overviewScope.currentWorkspaceId();
+                    GlobalFocusGrab.addDismissable(panelWindow);
+                    Qt.callLater(() => overviewScope.requestOverviewFocus());
                 }
             }
         }
@@ -348,10 +189,7 @@ Scope {
         Connections {
             target: GlobalFocusGrab
             function onDismissed() {
-                if (GlobalStates.overviewAltTabMode)
-                    overviewScope.cancelAltTab();
-                else
-                    GlobalStates.overviewOpen = false;
+                GlobalStates.overviewOpen = false;
             }
         }
 
@@ -361,34 +199,6 @@ Scope {
         function setSearchingText(text) {
             searchWidget.setSearchingText(text);
             searchWidget.focusFirstItem();
-        }
-
-        Item {
-            id: altTabKeyHandler
-            anchors.fill: parent
-            z: 1000
-            focus: GlobalStates.overviewAltTabMode && GlobalStates.overviewOpen
-            visible: GlobalStates.overviewAltTabMode
-
-            Keys.onPressed: event => overviewScope.handleAltTabKeyPressed(event)
-            Keys.onReleased: event => overviewScope.handleAltTabKeyReleased(event)
-
-            WheelHandler {
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                onWheel: event => {
-                    if (event.angleDelta.y > 0)
-                        overviewScope.openAltTabModeFromWheel(-1);
-                    else if (event.angleDelta.y < 0)
-                        overviewScope.openAltTabModeFromWheel(1);
-                }
-            }
-
-            Connections {
-                target: overviewScope
-                function onRequestAltTabFocus() {
-                    altTabKeyHandler.forceActiveFocus();
-                }
-            }
         }
 
         Item {
@@ -433,18 +243,13 @@ Scope {
             spacing: -8
 
             Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) {
-                    if (GlobalStates.overviewAltTabMode)
-                        overviewScope.cancelAltTab();
-                    else
-                        GlobalStates.overviewOpen = false;
-                }
+                if (event.key === Qt.Key_Escape)
+                    GlobalStates.overviewOpen = false;
             }
 
             SearchWidget {
                 id: searchWidget
                 anchors.horizontalCenter: parent.horizontalCenter
-                visible: !GlobalStates.overviewAltTabMode
                 Synchronizer on searchingText {
                     property alias source: panelWindow.searchingText
                 }
@@ -456,9 +261,7 @@ Scope {
                 active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
                 sourceComponent: OverviewWidget {
                     screen: panelWindow.screen
-                    visible: GlobalStates.overviewAltTabMode || (panelWindow.searchingText == "")
-                    altTabCycler: (dir) => overviewScope.cycleAltTabWorkspace(dir)
-                    altTabCommitter: () => overviewScope.commitAltTab()
+                    visible: (panelWindow.searchingText == "")
                 }
             }
 
@@ -507,18 +310,6 @@ Scope {
         function clipboardToggle() {
             overviewScope.toggleClipboard();
         }
-        function altTabNext() {
-            overviewScope.openAltTabMode(1);
-        }
-        function altTabPrev() {
-            overviewScope.openAltTabMode(-1);
-        }
-        function altTabCommit() {
-            overviewScope.commitAltTab();
-        }
-        function altTabCancel() {
-            overviewScope.cancelAltTab();
-        }
     }
 
     GlobalShortcut {
@@ -543,54 +334,6 @@ Scope {
 
         onPressed: {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
-        }
-    }
-    GlobalShortcut {
-        name: "overviewAltTabNext"
-        description: "Alt+Tab workspace overview: show or cycle next"
-
-        onPressed: {
-            overviewScope.openAltTabMode(1);
-        }
-    }
-    GlobalShortcut {
-        name: "overviewAltTabPrev"
-        description: "Alt+Shift+Tab workspace overview: show or cycle previous"
-
-        onPressed: {
-            overviewScope.openAltTabMode(-1);
-        }
-    }
-    GlobalShortcut {
-        name: "overviewAltTabWheelNext"
-        description: "Alt+wheel workspace overview: show or cycle next with throttling"
-
-        onPressed: {
-            overviewScope.openAltTabModeFromWheel(1);
-        }
-    }
-    GlobalShortcut {
-        name: "overviewAltTabWheelPrev"
-        description: "Alt+wheel workspace overview: show or cycle previous with throttling"
-
-        onPressed: {
-            overviewScope.openAltTabModeFromWheel(-1);
-        }
-    }
-    GlobalShortcut {
-        name: "overviewAltTabCommit"
-        description: "Alt+Tab workspace overview: commit on Alt release"
-
-        onPressed: {
-            overviewScope.commitAltTab();
-        }
-    }
-    GlobalShortcut {
-        name: "overviewAltTabCancel"
-        description: "Alt+Tab workspace overview: cancel"
-
-        onPressed: {
-            overviewScope.cancelAltTab();
         }
     }
     GlobalShortcut {
