@@ -40,6 +40,13 @@ Item {
                 GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
             }
         }
+        onWheel: wheel => {
+            if (wheel.angleDelta.y > 0)
+                Audio.incrementVolume();
+            else if (wheel.angleDelta.y < 0)
+                Audio.decrementVolume();
+            wheel.accepted = true;
+        }
     }
 
     RowLayout { // Real content
