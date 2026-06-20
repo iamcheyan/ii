@@ -15,14 +15,14 @@ PanelWindow {
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.keyboardFocus: GlobalStates.appLauncherOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
 
     anchors { top: true; left: true; right: true; bottom: true }
 
     visible: GlobalStates.appLauncherOpen
 
-    readonly property string fontStack: (Appearance?.font?.family?.main ?? "sans-serif") + ", MesloLGS Nerd Font Mono, Cantarell, Inter, Open Sans, MesloLGS NF, Ubuntu Nerd Font, Ubuntu, Noto Sans Mono, sans-serif"
+    readonly property string fontStack: (Appearance?.font?.family?.main ?? "sans-serif") + ", Noto Sans CJK SC, Noto Sans CJK TC, Noto Sans CJK JP, WenQuanYi Micro Hei, Source Han Sans SC, Source Han Sans TC, MesloLGS Nerd Font Mono, Cantarell, Inter, Open Sans, MesloLGS NF, Ubuntu Nerd Font, Ubuntu, Noto Sans Mono, sans-serif"
     readonly property string stateDir: Quickshell.shellDir + "/.state"
     readonly property string stateFile: stateDir + "/pinned-apps"
 
@@ -189,7 +189,12 @@ PanelWindow {
             loadPinnedIds();
             loadApps();
             searchField.text = "";
-            Qt.callLater(function() { searchField.forceActiveFocus(); });
+            Qt.callLater(function() {
+                searchField.forceActiveFocus();
+                if (Qt.inputMethod) Qt.inputMethod.show();
+            });
+        } else {
+            if (Qt.inputMethod) Qt.inputMethod.hide();
         }
     }
 
