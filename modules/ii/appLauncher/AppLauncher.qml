@@ -8,6 +8,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Widgets
 import Quickshell.Wayland
+import Quickshell.Hyprland
 
 PanelWindow {
     id: launcher
@@ -43,6 +44,51 @@ PanelWindow {
     property var pinnedIds: ({})
     property var allApps: []
     property var filteredApps: []
+
+    // Set of currently running window classes (mapped, not hidden).
+    property var runningSet: ({})
+
+    function updateRunningSet() {
+        const set = {};
+        const wl = HyprlandData.windowList || [];
+        for (let i = 0; i < wl.length; i++) {
+            const w = wl[i];
+            if (!w || !w.mapped || w.hidden) continue;
+            const cls = (w.class || "").toLowerCase();
+            const initial = (w.initialClass || "").toLowerCase();
+            if (cls) set[cls] = true;
+            if (initial) set[initial] = true;
+        }
+        launcher.runningSet = set;
+    }
+
+    // Returns true if a desktop entry appears to have at least one running window.
+    function isAppRunning(app) {
+        const set = launcher.runningSet;
+        if (!set) return false;
+        let any = false;
+        for (const _ in set) { any = true; break; }
+        if (!any) return false;
+
+        const id = (app.id || "").split("/").pop().split(".").pop().toLowerCase();
+        let exec = (app.execString || "").split(" ")[0].split("/").pop().toLowerCase();
+        // Strip common suffixes like "-stable", "-bin"
+        const stripped = exec.replace(/-stable$/, "").replace(/-bin$/, "").replace(/^env-/, "");
+        const candidates = [id, exec, stripped];
+        for (let i = 0; i < candidates.length; i++) {
+            const c = candidates[i];
+            if (!c) continue;
+            if (set[c]) return true;
+        }
+        // Fuzzy: does any running class contain the app id, or vice versa?
+        for (const k in set) {
+            if (!k) continue;
+            if (k === id || k === exec || k === stripped) return true;
+            if (id && (k.indexOf(id) >= 0 || id.indexOf(k) >= 0)) return true;
+            if (exec && (k.indexOf(exec) >= 0 || exec.indexOf(k) >= 0)) return true;
+        }
+        return false;
+    }
 
     function loadPinnedIds() {
         pinnedLoadProcess.running = false;
@@ -129,8 +175,17 @@ PanelWindow {
         }
     }
 
+    Connections {
+        target: HyprlandData
+
+        function onWindowListChanged() {
+            launcher.updateRunningSet();
+        }
+    }
+
     onVisibleChanged: {
         if (visible) {
+            updateRunningSet();
             loadPinnedIds();
             loadApps();
             searchField.text = "";
@@ -162,11 +217,11 @@ PanelWindow {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 24
-                spacing: 14
+                spacing: 16
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 42
+                    height: 44
                     radius: 10
                     color: "#18ffffff"
                     border.color: searchField.activeFocus ? "#3b82f6" : "#22ffffff"
@@ -232,7 +287,9 @@ PanelWindow {
                     color: "#60ffffff"
                     font.family: launcher.fontStack
                     font.pixelSize: 11
-                    Layout.leftMargin: 4
+                    Layout.leftMargin: 6
+                    Layout.rightMargin: 22
+                    Layout.fillWidth: true
                 }
 
                 Item {
@@ -243,11 +300,11 @@ PanelWindow {
                     GridView {
                         id: grid
                         anchors.fill: parent
-                        anchors.leftMargin: 4
-                        anchors.rightMargin: 18
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 22
 
-                        cellWidth:  100
-                        cellHeight: 112
+                        cellWidth:  110
+                        cellHeight: 120
                         model: launcher.filteredApps
                         clip: true
 
@@ -266,13 +323,17 @@ PanelWindow {
                             required property int index
 
                             property bool isPinned: !!launcher.pinnedIds[modelData.id]
+                            property bool isRunning: launcher.isAppRunning(modelData)
 
                             Rectangle {
                                 anchors.fill: parent
-                                anchors.margins: 4
-                                radius: 10
-                                color: ma.containsMouse ? "#18ffffff" : "transparent"
+                                anchors.margins: 5
+                                radius: 12
+                                color: ma.containsMouse ? "#16ffffff" : "transparent"
+                                border.color: ma.containsMouse ? "#10ffffff" : "transparent"
+                                border.width: 1
                                 Behavior on color { ColorAnimation { duration: 100 } }
+                                Behavior on border.color { ColorAnimation { duration: 100 } }
                             }
 
                             Rectangle {
@@ -280,29 +341,24 @@ PanelWindow {
                                 visible: ma.containsMouse || appItem.isPinned
                                 anchors.top: parent.top
                                 anchors.right: parent.right
-                                anchors.topMargin: 5
-                                anchors.rightMargin: 5
-                                width: 20; height: 20
-                                radius: 10
-                                color: appItem.isPinned ? "#3b82f6" : "#30ffffff"
+                                anchors.topMargin: 6
+                                anchors.rightMargin: 6
+                                width: 24; height: 24
+                                radius: 12
+                                color: appItem.isPinned ? "#3b82f6" : "#40000000"
+                                border.color: "#60ffffff"
+                                border.width: 1
                                 z: 2
+
+                                Behavior on color { ColorAnimation { duration: 100 } }
+                                Behavior on visible { NumberAnimation { property: "opacity"; duration: 80 } }
 
                                 MaterialSymbol {
                                     anchors.centerIn: parent
                                     fill: appItem.isPinned ? 1 : 0
                                     text: "keep"
-                                    iconSize: 11
+                                    iconSize: 13
                                     color: "#ffffff"
-                                }
-
-                                MouseArea {
-                                    id: pinMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: (mouse) => {
-                                        mouse.accepted = true;
-                                        launcher.togglePinned(appItem.modelData.id);
-                                    }
                                 }
                             }
 
@@ -310,14 +366,14 @@ PanelWindow {
                                 id: iconWrapper
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.top
-                                anchors.topMargin: 14
-                                width: 52; height: 52
+                                anchors.topMargin: 16
+                                width: 54; height: 54
 
                                 IconImage {
                                     id: appIcon
                                     anchors.fill: parent
                                     source: launcher.iconSource(appItem.modelData.icon)
-                                    implicitSize: 52
+                                    implicitSize: 54
                                     asynchronous: true
                                     mipmap: true
                                 }
@@ -325,7 +381,7 @@ PanelWindow {
                                 Rectangle {
                                     visible: appIcon.status !== Image.Ready
                                     anchors.fill: parent
-                                    radius: 12
+                                    radius: 13
                                     color: "#1e3a5f"
                                     Text {
                                         anchors.centerIn: parent
@@ -338,13 +394,28 @@ PanelWindow {
                                 }
                             }
 
-                            Text {
+                            // Running indicator: small yellow dot centered under the icon.
+                            Rectangle {
+                                visible: appItem.isRunning
                                 anchors.top: iconWrapper.bottom
-                                anchors.topMargin: 5
+                                anchors.topMargin: 4
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: 8; height: 8
+                                radius: 4
+                                color: "#ffc23a"
+                                border.color: "#803a2400"
+                                border.width: 1
+                                z: 1
+                            }
+
+                            Text {
+                                id: appLabel
+                                anchors.top: iconWrapper.bottom
+                                anchors.topMargin: 18
                                 anchors.left: parent.left
                                 anchors.right: parent.right
-                                anchors.leftMargin: 5
-                                anchors.rightMargin: 5
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
                                 horizontalAlignment: Text.AlignHCenter
                                 wrapMode: Text.WordWrap
                                 maximumLineCount: 2
@@ -352,19 +423,25 @@ PanelWindow {
                                 text: appItem.modelData.name
                                 font.family: launcher.fontStack
                                 font.pixelSize: 11
-                                color: "#dde0ec"
+                                color: ma.containsMouse ? "#ffffff" : "#dde0ec"
                                 lineHeight: 1.2
+                                Behavior on color { ColorAnimation { duration: 100 } }
                             }
 
+                            // Single MouseArea for the entire cell. Badge click is detected by
+                            // mapping the click position into the badge's coordinate system, so the
+                            // badge never steals hover and ma.containsMouse stays stable.
                             MouseArea {
                                 id: ma
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 z: 1
+                                cursorShape: Qt.PointingHandCursor
                                 onClicked: (mouse) => {
                                     const localPinPos = mapToItem(pinBadge, mouse.x, mouse.y);
                                     if (localPinPos.x >= 0 && localPinPos.x <= pinBadge.width &&
                                         localPinPos.y >= 0 && localPinPos.y <= pinBadge.height) {
+                                        launcher.togglePinned(appItem.modelData.id);
                                         return;
                                     }
                                     appItem.modelData.execute();
@@ -387,7 +464,7 @@ PanelWindow {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         anchors.right: parent.right
-                        anchors.rightMargin: 2
+                        anchors.rightMargin: 4
                         width: 8
                         radius: 4
                         color: "#16ffffff"
