@@ -9,10 +9,8 @@ Rectangle {
     property string text: ""
     property int textAlignment: Text.AlignLeft
     height: 26
-    Layout.fillWidth: false
-    Layout.leftMargin: -10
-    Layout.rightMargin: -10
-    Layout.topMargin: -10
+    Layout.fillWidth: true
+    Layout.topMargin: 0
     color: Appearance.tiling.bgTitlebar
     radius: 0
 

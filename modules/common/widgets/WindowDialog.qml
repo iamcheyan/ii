@@ -75,12 +75,7 @@ Rectangle {
 
         ColumnLayout {
             id: contentColumn
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                margins: 0
-            }
+            anchors.fill: parent
             spacing: 6
             opacity: root.show ? 1 : 0
             Behavior on opacity {
