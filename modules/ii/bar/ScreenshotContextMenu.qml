@@ -27,6 +27,21 @@ PopupWindow {
         root.menuClosed();
     }
 
+    Component.onCompleted: {
+        GlobalFocusGrab.addDismissable(root);
+    }
+
+    Component.onDestruction: {
+        GlobalFocusGrab.removeDismissable(root);
+    }
+
+    Connections {
+        target: GlobalFocusGrab
+        function onDismissed() {
+            root.close();
+        }
+    }
+
     // Click outside to dismiss
     MouseArea {
         anchors.fill: parent
