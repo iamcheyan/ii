@@ -293,6 +293,75 @@ Item { // Bar content region
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
             }
 
+            CircleUtilButton {
+                visible: root.useShortenedForm === 0
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.fillHeight: true
+                onClicked: {
+                    GlobalStates.barDialogType = "nightlight";
+                    GlobalStates.barDialogOpen = true;
+                }
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        fill: 1
+                        text: Hyprsunset.temperatureActive ? "bedtime" : "bedtime_off"
+                        iconSize: Appearance.font.pixelSize.normal
+                        color: Hyprsunset.temperatureActive ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Night Light")
+                    }
+                }
+            }
+
+            CircleUtilButton {
+                visible: root.useShortenedForm === 0
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.fillHeight: true
+                onClicked: Idle.toggleInhibit()
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        fill: 1
+                        text: "free_cancellation"
+                        iconSize: Appearance.font.pixelSize.normal
+                        color: Idle.inhibit ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Keep system awake")
+                    }
+                }
+            }
+
+            CircleUtilButton {
+                visible: root.useShortenedForm === 0
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.fillHeight: true
+                onClicked: {
+                    GlobalStates.barDialogType = "audio";
+                    GlobalStates.barDialogOpen = true;
+                }
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        fill: 1
+                        text: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
+                        iconSize: Appearance.font.pixelSize.normal
+                        color: Appearance.colors.colOnLayer0
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Audio output")
+                    }
+                }
+            }
+
             BatteryIndicator {
                 visible: Battery.available && root.useShortenedForm === 0
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter

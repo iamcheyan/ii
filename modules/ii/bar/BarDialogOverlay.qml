@@ -5,6 +5,7 @@ import qs.modules.common.widgets
 import qs.modules.ii.sidebarRight.bluetoothDevices
 import qs.modules.ii.sidebarRight.wifiNetworks
 import qs.modules.ii.sidebarRight.nightLight
+import qs.modules.ii.sidebarRight.volumeMixer
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -101,6 +102,14 @@ Scope {
                     id: clipboardDialog
                     anchors.fill: parent
                     visible: GlobalStates.barDialogType === "clipboard"
+                    show: visible
+                    onDismiss: overlayWindow.close()
+                }
+
+                VolumeDialog {
+                    id: volumeDialog
+                    anchors.fill: parent
+                    visible: GlobalStates.barDialogType === "audio"
                     show: visible
                     onDismiss: overlayWindow.close()
                 }
