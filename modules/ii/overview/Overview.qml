@@ -14,6 +14,7 @@ import Quickshell.Hyprland
 Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
+    property bool overviewGrabbed: false
 
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
         ?? Quickshell.screens[0]
@@ -86,6 +87,21 @@ Scope {
         overviewScope.navigateOverviewByIndex(dir);
     }
 
+    function openGrabbedMode(dir) {
+        if (GlobalStates.overviewOpen && overviewScope.overviewGrabbed) {
+            overviewScope.cycleOverviewWorkspace(dir);
+        } else {
+            GlobalStates.overviewOpen = true;
+            overviewScope.overviewGrabbed = true;
+            Qt.callLater(() => overviewScope.cycleOverviewWorkspace(dir));
+        }
+    }
+
+    function commitGrabbedMode() {
+        overviewScope.overviewGrabbed = false;
+        GlobalStates.overviewOpen = false;
+    }
+
     function overviewNavigationActive() {
         return GlobalStates.overviewOpen
             && panelWindow.searchingText === "";
@@ -152,9 +168,9 @@ Scope {
 
         WlrLayershell.namespace: "quickshell:overview"
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: GlobalStates.overviewOpen
-            ? WlrKeyboardFocus.OnDemand
-            : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: overviewScope.overviewGrabbed
+            ? WlrKeyboardFocus.Exclusive
+            : (GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
         color: "transparent"
 
         mask: Region {
@@ -172,6 +188,7 @@ Scope {
             target: GlobalStates
             function onOverviewOpenChanged() {
                 if (!GlobalStates.overviewOpen) {
+                    overviewScope.overviewGrabbed = false;
                     GlobalStates.overviewFocusedWorkspaceId = -1;
                     searchWidget.disableExpandAnimation();
                     overviewScope.dontAutoCancelSearch = false;
@@ -205,7 +222,7 @@ Scope {
             id: overviewKeyHandler
             anchors.fill: parent
             z: 999
-            focus: overviewScope.overviewNavigationActive()
+            focus: overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed
 
             Keys.onPressed: event => {
                 if (event.key === Qt.Key_Escape) {
@@ -213,13 +230,27 @@ Scope {
                     event.accepted = true;
                     return;
                 }
+                if (overviewScope.overviewGrabbed && event.key === Qt.Key_Tab) {
+                    const backward = (event.modifiers & Qt.ShiftModifier) !== 0;
+                    overviewScope.cycleOverviewWorkspace(backward ? -1 : 1);
+                    event.accepted = true;
+                    return;
+                }
                 overviewScope.handleOverviewNavigationKey(event);
+            }
+
+            Keys.onReleased: event => {
+                if (overviewScope.overviewGrabbed &&
+                    (event.key === Qt.Key_Super_L || event.key === Qt.Key_Super_R || event.key === Qt.Key_Meta)) {
+                    overviewScope.commitGrabbedMode();
+                    event.accepted = true;
+                }
             }
 
             Connections {
                 target: overviewScope
                 function onRequestOverviewFocus() {
-                    if (overviewScope.overviewNavigationActive())
+                    if (overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed)
                         overviewKeyHandler.forceActiveFocus();
                 }
             }
@@ -310,6 +341,15 @@ Scope {
         function clipboardToggle() {
             overviewScope.toggleClipboard();
         }
+        function overviewNext() {
+            overviewScope.openGrabbedMode(1);
+        }
+        function overviewPrev() {
+            overviewScope.openGrabbedMode(-1);
+        }
+        function overviewCommit() {
+            overviewScope.commitGrabbedMode();
+        }
     }
 
     GlobalShortcut {
@@ -335,6 +375,21 @@ Scope {
         onPressed: {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
         }
+    }
+    GlobalShortcut {
+        name: "overviewNext"
+        description: "Workspace overview: cycle next (Win+Tab)"
+        onPressed: overviewScope.openGrabbedMode(1)
+    }
+    GlobalShortcut {
+        name: "overviewPrev"
+        description: "Workspace overview: cycle prev (Win+Shift+Tab)"
+        onPressed: overviewScope.openGrabbedMode(-1)
+    }
+    GlobalShortcut {
+        name: "overviewCommit"
+        description: "Workspace overview: commit on Win release"
+        onPressed: overviewScope.commitGrabbedMode()
     }
     GlobalShortcut {
         name: "overviewClipboardToggle"
