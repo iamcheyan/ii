@@ -139,16 +139,32 @@ Scope {
     // Alt+Tab: only cycle workspaces that exist on the focused monitor
     function workspaceCycleList() {
         const onMonitor = HyprlandData.workspaceIdsOnMonitor(overviewScope.focusedMonitorName());
-        if (onMonitor.length > 0)
-            return onMonitor;
-        const currentWs = overviewScope.currentWorkspaceId();
-        return currentWs > 0 ? [currentWs] : [1];
+        const ids = onMonitor.length > 0 ? onMonitor : (() => {
+            const currentWs = overviewScope.currentWorkspaceId();
+            return currentWs > 0 ? [currentWs] : [1];
+        })();
+        let maxId = 0;
+        for (const id of ids) maxId = Math.max(maxId, id);
+        if (maxId === 0) maxId = overviewScope.currentWorkspaceId();
+        const trailingId = maxId + 1;
+        return trailingId <= 100 ? [...ids, trailingId] : ids;
+    }
+
+    function altTabTrailingId() {
+        const list = overviewScope.workspaceCycleList();
+        if (list.length === 0) return -1;
+        const last = list[list.length - 1];
+        return HyprlandData.workspaceById[last] === undefined ? last : -1;
     }
 
     function focusWorkspace(wsId) {
         if (wsId < 1)
             return;
         GlobalStates.overviewAltTabSelectedWorkspaceId = wsId;
+        if (wsId === overviewScope.altTabTrailingId()) {
+            Qt.callLater(overviewScope.syncOverviewScreen);
+            return;
+        }
         overviewScope.dispatchFocusWorkspace(wsId);
         Qt.callLater(overviewScope.syncOverviewScreen);
     }
@@ -193,10 +209,14 @@ Scope {
     function commitAltTab() {
         if (!GlobalStates.overviewAltTabMode)
             return;
+        const selected = GlobalStates.overviewAltTabSelectedWorkspaceId;
+        const isTrailing = selected > 0 && HyprlandData.workspaceById[selected] === undefined;
         GlobalStates.overviewAltTabMode = false;
         GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
         GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
         GlobalStates.overviewOpen = false;
+        if (isTrailing)
+            Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);
     }
 
     function cancelAltTab() {
