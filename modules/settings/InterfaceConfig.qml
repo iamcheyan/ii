@@ -100,29 +100,6 @@ ContentPage {
         }
     }
     ContentSection {
-        icon: "call_to_action"
-        title: Translation.tr("Dock")
-
-        ConfigSwitch {
-            buttonIcon: "check"
-            text: Translation.tr("Enable")
-            checked: Config.options.dock.enable
-            onCheckedChanged: {
-                Config.options.dock.enable = checked;
-            }
-        }
-
-        ConfigSwitch {
-            buttonIcon: "highlight_mouse_cursor"
-            text: Translation.tr("Hover to reveal")
-            checked: Config.options.dock.hoverToReveal
-            onCheckedChanged: {
-                Config.options.dock.hoverToReveal = checked;
-            }
-        }
-    }
-
-    ContentSection {
         icon: "lock"
         title: Translation.tr("Lock screen")
 

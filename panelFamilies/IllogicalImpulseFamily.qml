@@ -6,7 +6,6 @@ import qs.modules.ii.appLauncher
 import qs.modules.ii.background
 import qs.modules.ii.bar
 import qs.modules.ii.cheatsheet
-import qs.modules.ii.dock
 import qs.modules.ii.lock
 import qs.modules.ii.mediaControls
 import qs.modules.ii.notificationPopup
@@ -106,13 +105,6 @@ Scope {
     }
 
     // Tier 2 — 低频或重型模块
-    PanelLoader {
-        loadTier: 2
-        tier1Ready: family.tier1Ready
-        tier2Ready: family.tier2Ready
-        extraCondition: Config.options.dock.enable
-        component: Dock {}
-    }
     PanelLoader {
         loadTier: 2
         tier1Ready: family.tier1Ready
