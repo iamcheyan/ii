@@ -193,14 +193,10 @@ PanelWindow {
         }
     }
 
-    Rectangle {
+    MouseArea {
         anchors.fill: parent
-        color: "#b3000000"
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: GlobalStates.appLauncherOpen = false
-        }
+        onClicked: GlobalStates.appLauncherOpen = false
+    }
 
         Rectangle {
             id: card
