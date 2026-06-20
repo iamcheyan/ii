@@ -376,7 +376,7 @@ Scope {
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.NoButton
-                hoverEnabled: true
+                hoverEnabled: false
 
                 onWheel: wheel => {
                     if (wheel.angleDelta.y > 0)
