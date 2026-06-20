@@ -522,7 +522,6 @@ PanelWindow {
                 }
             }
         }
-    }
 
     IpcHandler {
         target: "appLauncher"
