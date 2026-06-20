@@ -273,7 +273,7 @@ Scope {
         function onActiveWorkspaceChanged() {
             if (!GlobalStates.overviewAltTabMode || !HyprlandData.activeWorkspace?.id)
                 return;
-            GlobalStates.overviewAltTabSelectedWorkspaceId = HyprlandData.activeWorkspace.id;
+            // Don't overwrite — cycleAltTabWorkspace manages selectedWorkspaceId
         }
     }
 
@@ -353,6 +353,16 @@ Scope {
 
             Keys.onPressed: event => overviewScope.handleAltTabKeyPressed(event)
             Keys.onReleased: event => overviewScope.handleAltTabKeyReleased(event)
+
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => {
+                    if (event.angleDelta.y > 0)
+                        overviewScope.cycleAltTabWorkspace(-1);
+                    else if (event.angleDelta.y < 0)
+                        overviewScope.cycleAltTabWorkspace(1);
+                }
+            }
 
             Connections {
                 target: overviewScope
