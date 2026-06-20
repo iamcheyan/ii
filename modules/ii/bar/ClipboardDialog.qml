@@ -26,10 +26,10 @@ WindowDialog {
         id: clipboardList
         Layout.fillHeight: true
         Layout.fillWidth: true
-        Layout.topMargin: -15
-        Layout.bottomMargin: -16
-        Layout.leftMargin: -10
-        Layout.rightMargin: -10
+        Layout.topMargin: 0
+        Layout.bottomMargin: 0
+        Layout.leftMargin: 0
+        Layout.rightMargin: 0
 
         clip: true
         spacing: 0

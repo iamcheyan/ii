@@ -64,10 +64,10 @@ ColumnLayout {
 
     component DialogSectionListView: StyledListView {
         Layout.fillWidth: true
-        Layout.topMargin: -22
-        Layout.bottomMargin: -16
-        Layout.leftMargin: -10
-        Layout.rightMargin: -10
+        Layout.topMargin: 0
+        Layout.bottomMargin: 0
+        Layout.leftMargin: 0
+        Layout.rightMargin: 0
         topMargin: 12
         bottomMargin: 12
         leftMargin: 20

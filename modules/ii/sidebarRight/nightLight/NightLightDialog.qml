@@ -14,7 +14,7 @@ import Quickshell.Hyprland
 WindowDialog {
     id: root
     property var screen: root.QsWindow.window?.screen
-    property var brightnessMonitor: Brightness.getMonitorForScreen(screen)
+    property var brightnessMonitor: Brightness.getMonitorForScreen(screen) ?? ({ brightness: 0, setBrightness: function(){} })
     backgroundHeight: 700
 
     WindowDialogTitle {
@@ -26,14 +26,14 @@ WindowDialog {
     }
 
     WindowDialogSeparator {
-        Layout.topMargin: -22
+        Layout.topMargin: 0
         Layout.leftMargin: 0
         Layout.rightMargin: 0
     }
 
     Column {
         id: nightLightColumn
-        Layout.topMargin: -16
+        Layout.topMargin: 0
         Layout.fillWidth: true
 
         ConfigSwitch {
@@ -86,14 +86,14 @@ WindowDialog {
     }
 
     WindowDialogSeparator {
-        Layout.topMargin: -22
+        Layout.topMargin: 0
         Layout.leftMargin: 0
         Layout.rightMargin: 0
     }
 
     Column {
         id: antiFlashbangColumn
-        Layout.topMargin: -16
+        Layout.topMargin: 0
         Layout.fillWidth: true
 
         ConfigSwitch {
@@ -137,14 +137,14 @@ WindowDialog {
     }
 
     WindowDialogSeparator {
-        Layout.topMargin: -22
+        Layout.topMargin: 0
         Layout.leftMargin: 0
         Layout.rightMargin: 0
     }
 
     Column {
         id: brightnessColumn
-        Layout.topMargin: -16
+        Layout.topMargin: 0
         Layout.fillWidth: true
 
         WindowDialogSlider {
@@ -164,14 +164,14 @@ WindowDialog {
     }
 
     WindowDialogSeparator {
-        Layout.topMargin: -22
+        Layout.topMargin: 0
         Layout.leftMargin: 0
         Layout.rightMargin: 0
     }
 
     Column {
         id: gammaColumn
-        Layout.topMargin: -16
+        Layout.topMargin: 0
         Layout.fillWidth: true
         Layout.fillHeight: true
 
