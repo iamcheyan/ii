@@ -142,12 +142,19 @@ Item {
             anchors.fill: parent
             z: -1
             acceptedButtons: Qt.NoButton
-            enabled: root.overviewNavigationActive
+            enabled: root.overviewNavigationActive || GlobalStates.overviewAltTabMode
             onWheel: wheel => {
-                if (wheel.angleDelta.y > 0)
-                    root.cycleOverviewWorkspace(-1);
-                else if (wheel.angleDelta.y < 0)
-                    root.cycleOverviewWorkspace(1);
+                if (GlobalStates.overviewAltTabMode) {
+                    if (wheel.angleDelta.y > 0)
+                        overviewScope.cycleAltTabWorkspace(-1);
+                    else if (wheel.angleDelta.y < 0)
+                        overviewScope.cycleAltTabWorkspace(1);
+                } else {
+                    if (wheel.angleDelta.y > 0)
+                        root.cycleOverviewWorkspace(-1);
+                    else if (wheel.angleDelta.y < 0)
+                        root.cycleOverviewWorkspace(1);
+                }
                 wheel.accepted = true;
             }
         }
@@ -210,13 +217,19 @@ Item {
                         anchors.fill: parent
                         acceptedButtons: Qt.LeftButton
                         onWheel: wheel => {
-                            if (!root.overviewNavigationActive)
-                                return;
-                            if (wheel.angleDelta.y > 0)
-                                root.cycleOverviewWorkspace(-1);
-                            else if (wheel.angleDelta.y < 0)
-                                root.cycleOverviewWorkspace(1);
-                            wheel.accepted = true;
+                            if (GlobalStates.overviewAltTabMode) {
+                                if (wheel.angleDelta.y > 0)
+                                    overviewScope.cycleAltTabWorkspace(-1);
+                                else if (wheel.angleDelta.y < 0)
+                                    overviewScope.cycleAltTabWorkspace(1);
+                                wheel.accepted = true;
+                            } else if (root.overviewNavigationActive) {
+                                if (wheel.angleDelta.y > 0)
+                                    root.cycleOverviewWorkspace(-1);
+                                else if (wheel.angleDelta.y < 0)
+                                    root.cycleOverviewWorkspace(1);
+                                wheel.accepted = true;
+                            }
                         }
                         onPressed: {
                             if (root.draggingTargetWorkspace === -1) {
@@ -345,13 +358,19 @@ Item {
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                         drag.target: parent
                         onWheel: wheel => {
-                            if (!root.overviewNavigationActive)
-                                return;
-                            if (wheel.angleDelta.y > 0)
-                                root.cycleOverviewWorkspace(-1);
-                            else if (wheel.angleDelta.y < 0)
-                                root.cycleOverviewWorkspace(1);
-                            wheel.accepted = true;
+                            if (GlobalStates.overviewAltTabMode) {
+                                if (wheel.angleDelta.y > 0)
+                                    overviewScope.cycleAltTabWorkspace(-1);
+                                else if (wheel.angleDelta.y < 0)
+                                    overviewScope.cycleAltTabWorkspace(1);
+                                wheel.accepted = true;
+                            } else if (root.overviewNavigationActive) {
+                                if (wheel.angleDelta.y > 0)
+                                    root.cycleOverviewWorkspace(-1);
+                                else if (wheel.angleDelta.y < 0)
+                                    root.cycleOverviewWorkspace(1);
+                                wheel.accepted = true;
+                            }
                         }
                         onPressed: (mouse) => {
                             root.draggingFromWorkspace = windowData?.workspace.id
