@@ -10,7 +10,6 @@ import Quickshell
  */
 Singleton {
     id: root
-    property bool sloppySearch: Config.options?.search.sloppy ?? false
     property real scoreThreshold: 0.2
     property var substitutions: ({
         "code-url-handler": "visual-studio-code",
@@ -59,16 +58,6 @@ Singleton {
     }))
 
     function fuzzyQuery(search: string): var { // Idk why list<DesktopEntry> doesn't work
-        if (root.sloppySearch) {
-            const results = list.map(obj => ({
-                entry: obj,
-                score: Levendist.computeScore(obj.name.toLowerCase(), search.toLowerCase())
-            })).filter(item => item.score > root.scoreThreshold)
-                .sort((a, b) => b.score - a.score)
-            return results
-                .map(item => item.entry)
-        }
-
         return Fuzzy.go(search, preppedNames, {
             all: true,
             key: "name"

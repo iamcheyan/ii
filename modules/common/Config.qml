@@ -206,7 +206,6 @@ Singleton {
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property bool borderless: false // true for no grouping of items
-                property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool showBackground: true
                 property bool verbose: true
                 property bool vertical: false
@@ -351,7 +350,7 @@ Singleton {
 
             property JsonObject notifications: JsonObject {
                 property int timeout: 7000
-                property JsonObject monitor: JsonObject {
+                property JsonObject forceMonitor: JsonObject {
                     property bool enable: false
                     property string name: "" // Name of the monitor to show notifications on, like "eDP-1". Find out with 'hyprctl monitors' command
                 }
@@ -434,14 +433,6 @@ Singleton {
                     property bool enable: false
                     property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.
                 }
-                property JsonObject booru: JsonObject {
-                    property bool allowNsfw: false
-                    property string defaultProvider: "yandere"
-                    property int limit: 20
-                    property JsonObject zerochan: JsonObject {
-                        property string username: "[unset]"
-                    }
-                }
                 property JsonObject cornerOpen: JsonObject {
                     property bool enable: true
                     property bool bottom: false
@@ -454,27 +445,6 @@ Singleton {
                     property int clicklessCornerVerticalOffset: 1
                 }
 
-                property JsonObject quickToggles: JsonObject {
-                    property string style: "android" // Options: classic, android
-                    property JsonObject android: JsonObject {
-                        property int columns: 5
-                        property list<var> toggles: [
-                            { "size": 2, "type": "network" },
-                            { "size": 2, "type": "bluetooth"  },
-                            { "size": 1, "type": "idleInhibitor" },
-                            { "size": 1, "type": "mic" },
-                            { "size": 2, "type": "audio" },
-                            { "size": 2, "type": "nightLight" }
-                        ]
-                    }
-                }
-
-                property JsonObject quickSliders: JsonObject {
-                    property bool enable: false
-                    property bool showMic: false
-                    property bool showVolume: true
-                    property bool showBrightness: true
-                }
             }
 
             property JsonObject screenRecord: JsonObject {

@@ -22,7 +22,6 @@ Singleton {
     property bool overviewDraggingTargetIsTrailing: false
     property bool regionSelectorOpen: false
     property bool scheduleOpen: false
-    property bool searchOpen: false
     property bool screenLocked: false
     property bool screenLockContainsCharacters: false
     property bool screenUnlockFailed: false
@@ -30,7 +29,6 @@ Singleton {
     property bool superDown: false
     property bool superReleaseMightTrigger: true
     property bool workspaceShowNumbers: false
-    property string sidebarRightAutoDialog: ""
     property bool barDialogOpen: false
     property string barDialogType: ""
 
