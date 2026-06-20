@@ -66,6 +66,9 @@ Item {
                 toggled: false
                 buttonIcon: "restart_alt"
                 onClicked: {
+                    // Kill any other quickshell process before reloading so only this one survives.
+                    Quickshell.execDetached(["bash", "-c", "pgrep -x quickshell | grep -vE '^$' | tr '\\n' ' '"])
+                    Quickshell.execDetached(["bash", "-c", "for pid in $(pgrep -x quickshell); do if [ \"$pid\" != \"$$\" ] && [ \"$pid\" != \"$PPID\" ]; then kill \"$pid\" 2>/dev/null; fi; done"])
                     Quickshell.execDetached(["hyprctl", "reload"])
                     Quickshell.reload(true);
                 }
