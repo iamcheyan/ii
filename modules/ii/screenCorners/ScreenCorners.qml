@@ -25,7 +25,8 @@ Scope {
         id: hotspot
         property bool isRight: false
         property bool fullscreen: false
-        property bool triggered: false  // suppress re-trigger until mouse leaves
+        property bool triggered: false
+        property bool cooldown: false   // blocks re-trigger after panel closes
         visible: !fullscreen
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "quickshell:screenCorners"
@@ -38,16 +39,28 @@ Scope {
         implicitHeight: 4
         mask: Region { item: hotspotArea }
 
-        // Reset when the target panel closes (e.g. via Esc)
+        Timer {
+            id: cooldownTimer
+            interval: 800
+            repeat: false
+            onTriggered: hotspot.cooldown = false
+        }
+
         Connections {
             target: GlobalStates
             function onOverviewOpenChanged() {
-                if (hotspot.isRight && !GlobalStates.overviewOpen)
+                if (hotspot.isRight && !GlobalStates.overviewOpen) {
                     hotspot.triggered = false;
+                    hotspot.cooldown = true;
+                    cooldownTimer.restart();
+                }
             }
             function onAppLauncherOpenChanged() {
-                if (!hotspot.isRight && !GlobalStates.appLauncherOpen)
+                if (!hotspot.isRight && !GlobalStates.appLauncherOpen) {
                     hotspot.triggered = false;
+                    hotspot.cooldown = true;
+                    cooldownTimer.restart();
+                }
             }
         }
 
@@ -56,14 +69,18 @@ Scope {
             anchors.fill: parent
             hoverEnabled: true
             onEntered: {
-                if (hotspot.triggered) return;
+                if (hotspot.triggered || hotspot.cooldown) return;
                 hotspot.triggered = true;
                 if (hotspot.isRight)
                     GlobalStates.overviewOpen = true;
                 else
                     GlobalStates.appLauncherOpen = true;
             }
-            onExited: hotspot.triggered = false
+            onExited: {
+                hotspot.triggered = false;
+                if (!hotspot.cooldown)
+                    cooldownTimer.stop();
+            }
         }
     }
 
