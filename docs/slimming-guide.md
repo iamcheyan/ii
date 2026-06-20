@@ -23,6 +23,7 @@
 | 2026-06-20 | **AI 全套** | ✅ 已删除（见下文） |
 | 2026-06-20 | **Waffle 全套** | ✅ 已删除（见下文） |
 | 2026-06-20 | **SidebarLeft** | ✅ 已删除（见下文） |
+| 2026-06-21 | **Overlay / Win+G** | ✅ 已删除（见下文） |
 | | | |
 
 ---
@@ -90,7 +91,7 @@ Tier 说明见 [startup-performance.md](./startup-performance.md)。删除某模
 | **SidebarRight** | 右侧控制中心 | `cornerOpen.enable: true` | **保留** | — |
 | **Dock** | 底部 Dock | `dock.enable: false` | **可删** | 删 PanelLoader + `modules/ii/dock/` |
 | **MediaControls** | 浮动媒体控制 | 未明确使用 | 可选 | 删 PanelLoader + `modules/ii/mediaControls/` |
-| **Overlay** | 笔记/准星/悬浮层 | 未明确使用 | 可选 | 删 PanelLoader + `modules/ii/overlay/` |
+| **Overlay** | 笔记/准星/悬浮层 | — | ✅ 已删除 | 见下方「已删除」节 |
 | **ScreenTranslator** | 屏幕 OCR 翻译 | 未明确使用 | **可删** | 删 PanelLoader + `modules/ii/screenTranslator/` |
 | **WallpaperSelector** | 壁纸选择器 | 偶尔用 | 可选 | 删 PanelLoader + `modules/ii/wallpaperSelector/` + `services/Wallpapers.qml` |
 
@@ -121,6 +122,36 @@ modules/ii/bar/LeftSidebarButton.qml
 - 屏幕左上/左下角仍可滚轮调亮度，但不再打开侧边栏
 - 竖栏顶部的左侧边栏按钮：**gone**
 - Tier 1 少加载 1 个面板模块
+
+---
+
+## ✅ 已删除：Overlay / Win+G（2026-06-21）
+
+Win+G 悬浮工具层包含准星、悬浮图片、FPS limiter、录屏控制、资源面板、便签和音量混合器镜像。它是独立面板模块，依赖右侧栏的 volume mixer，但右侧栏不反向依赖它。
+
+### 删除的文件/目录
+
+```
+modules/ii/overlay/                         # 整个目录
+modules/common/widgets/widgetCanvas/AbstractOverlayWidget.qml
+assets/icons/crosshair-symbolic.svg
+```
+
+### 修改的文件
+
+| 文件 | 改动 |
+|------|------|
+| `panelFamilies/IllogicalImpulseFamily.qml` | 移除 `Overlay` import 和 Tier 2 PanelLoader |
+| `GlobalStates.qml` | 删除 `overlayOpen`、`crosshairOpen` |
+| `modules/common/Config.qml` | 删除 `overlay`、`crosshair` 配置 |
+| `modules/common/Persistent.qml` | 删除 overlay 持久化状态 |
+| `modules/settings/InterfaceConfig.qml` | 删除 Overlay / Crosshair / Floating Image 设置 |
+
+### 影响
+
+- `quickshell:overlayToggle` / `overlay` IPC：**gone**
+- Win+G 悬浮工具层：**gone**
+- 右侧栏 volume mixer、RegionSelector 录屏/截图功能保留
 
 ---
 
@@ -243,7 +274,7 @@ modules/ii/background/widgets/weather/
 4. **Dock** — 已 `enable: false`
 5. **Booru 服务 + Anime 残留** — `weeb: 0` 时服务仍可能被引用
 6. **OnScreenKeyboard** — 栏上按钮已关
-7. **ScreenTranslator / Overlay / MediaControls** — 按实际使用删
+7. **ScreenTranslator / MediaControls** — 按实际使用删
 8. **背景 clock/weather 小部件代码** — 配置已关
 9. **Cheatsheet / WallpaperSelector** — 低频功能
 10. **翻译 JSON 其他语言** — 只留 `zh_CN.json` + `en_US.json`

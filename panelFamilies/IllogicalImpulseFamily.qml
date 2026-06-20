@@ -17,7 +17,6 @@ import qs.modules.ii.schedulePopup
 import qs.modules.ii.screenCorners
 import qs.modules.ii.sessionScreen
 import qs.modules.ii.sidebarRight
-import qs.modules.ii.overlay
 
 Scope {
     id: family
@@ -105,11 +104,5 @@ Scope {
         tier1Ready: family.tier1Ready
         tier2Ready: family.tier2Ready
         component: MediaControls {}
-    }
-    PanelLoader {
-        loadTier: 2
-        tier1Ready: family.tier1Ready
-        tier2Ready: family.tier2Ready
-        component: Overlay {}
     }
 }
