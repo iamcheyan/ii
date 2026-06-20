@@ -25,6 +25,7 @@ Scope {
         id: hotspot
         property bool isRight: false
         property bool fullscreen: false
+        property bool triggered: false  // suppress re-trigger until mouse leaves
         visible: !fullscreen
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "quickshell:screenCorners"
@@ -36,13 +37,33 @@ Scope {
         implicitWidth: 200
         implicitHeight: 4
         mask: Region { item: hotspotArea }
+
+        // Reset when the target panel closes (e.g. via Esc)
+        Connections {
+            target: GlobalStates
+            function onOverviewOpenChanged() {
+                if (hotspot.isRight && !GlobalStates.overviewOpen)
+                    hotspot.triggered = false;
+            }
+            function onAppLauncherOpenChanged() {
+                if (!hotspot.isRight && !GlobalStates.appLauncherOpen)
+                    hotspot.triggered = false;
+            }
+        }
+
         MouseArea {
             id: hotspotArea
             anchors.fill: parent
             hoverEnabled: true
-            onEntered: isRight
-                ? (GlobalStates.overviewOpen = !GlobalStates.overviewOpen)
-                : (GlobalStates.appLauncherOpen = !GlobalStates.appLauncherOpen)
+            onEntered: {
+                if (hotspot.triggered) return;
+                hotspot.triggered = true;
+                if (hotspot.isRight)
+                    GlobalStates.overviewOpen = true;
+                else
+                    GlobalStates.appLauncherOpen = true;
+            }
+            onExited: hotspot.triggered = false
         }
     }
 
