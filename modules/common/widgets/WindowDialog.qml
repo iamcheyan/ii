@@ -10,7 +10,7 @@ Rectangle {
 
     property bool show: false
     default property alias contentData: contentColumn.data
-    property real backgroundHeight: dialogBackground.implicitHeight
+    property real backgroundHeight: 400
     property real backgroundWidth: 360
     property real backgroundAnimationMovementDistance: 60
 
@@ -22,10 +22,7 @@ Rectangle {
         }
     }
 
-    color: root.show ? Appearance.tiling.border : Appearance.tiling.bg
-    Behavior on color {
-        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
-    }
+    color: "transparent"
     visible: dialogBackground.implicitHeight > 0
 
     onShowChanged: {
@@ -53,7 +50,7 @@ Rectangle {
         property real targetY: root.height / 2 - root.backgroundHeight / 2
         y: root.show ? targetY : (targetY - root.backgroundAnimationMovementDistance)
         implicitWidth: root.backgroundWidth
-        implicitHeight: contentColumn.implicitHeight + contentColumn.anchors.margins * 2
+        implicitHeight: show ? root.backgroundHeight : 0
         Behavior on implicitHeight {
             NumberAnimation {
                 id: dialogBackgroundHeightAnimation
