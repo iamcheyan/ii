@@ -15,6 +15,7 @@ Item {
     id: root
     required property var screen
     property var altTabCycler: null
+    property var altTabCommitter: null
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property var toplevels: ToplevelManager.toplevels
     // Clamp to avoid lock-screen temp workspace (2147483647 - N) leaking into UI
@@ -237,6 +238,7 @@ Item {
                                 if (GlobalStates.overviewAltTabMode) {
                                     GlobalStates.overviewAltTabSelectedWorkspaceId = workspace.workspaceValue;
                                     Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspace.workspaceValue} })`);
+                                    if (root.altTabCommitter) root.altTabCommitter();
                                 } else if (workspace.isTrailingEmpty) {
                                     GlobalStates.overviewOpen = false;
                                     Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);

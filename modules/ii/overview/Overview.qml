@@ -272,7 +272,7 @@ Scope {
         if (!GlobalStates.overviewAltTabMode || !GlobalStates.overviewOpen)
             return;
 
-        if (event.key === Qt.Key_Super_L || event.key === Qt.Key_Super_R || event.key === Qt.Key_Meta) {
+        if (event.key === Qt.Key_Alt || event.key === Qt.Key_AltGr) {
             overviewScope.commitAltTab();
             event.accepted = true;
         }
@@ -458,6 +458,7 @@ Scope {
                     screen: panelWindow.screen
                     visible: GlobalStates.overviewAltTabMode || (panelWindow.searchingText == "")
                     altTabCycler: (dir) => overviewScope.cycleAltTabWorkspace(dir)
+                    altTabCommitter: () => overviewScope.commitAltTab()
                 }
             }
 
