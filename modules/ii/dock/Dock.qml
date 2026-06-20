@@ -49,10 +49,11 @@ Scope {
             readonly property bool hoverRevealEnabled: Config.options?.dock.hoverToReveal ?? true
             readonly property real hoverRegion: Config.options?.dock.hoverRegionHeight ?? 4
 
+            property bool hoverOpen: false
             property bool requestDockShow: dockAppsVertical.requestDockShow
             property bool reveal: dockRoot.requestDockShow
                 || dockRoot.workspaceIsEmpty
-                || (dockRoot.hoverRevealEnabled && dockMouseArea.containsMouse)
+                || (dockRoot.hoverRevealEnabled && dockRoot.hoverOpen)
 
             anchors {
                 bottom: dockRoot.horizontal
@@ -69,76 +70,91 @@ Scope {
             implicitHeight: dockBackground.implicitHeight
 
             mask: Region {
-                item: dockMouseArea
+                item: dockInputRegion
             }
 
-            MouseArea {
-                id: dockMouseArea
+            Item {
+                id: dockHoverRegion
                 anchors.fill: parent
 
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton
-
                 Item {
-                    id: dockHoverRegion
-                    anchors.fill: parent
+                    id: dockBackground
+                    width: dockRoot.dockWidth
+                    height: implicitHeight
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: dockRoot.reveal ? 0 : -width + dockRoot.hoverRegion
+                    implicitWidth: dockRoot.dockWidth
+                    implicitHeight: dockRowVertical.implicitHeight + dockRoot.dockPadding * 2
 
-                    Item {
-                        id: dockBackground
-                        width: dockRoot.dockWidth
-                        height: implicitHeight
-                        anchors.verticalCenter: parent.verticalCenter
-                        x: dockRoot.reveal ? 0 : -width + dockRoot.hoverRegion
-                        implicitWidth: dockRoot.dockWidth
-                        implicitHeight: dockRowVertical.implicitHeight + dockRoot.dockPadding * 2
-
-                        Behavior on x {
-                            NumberAnimation {
-                                duration: Appearance.animation.elementMove.duration
-                                easing.type: Easing.OutCubic
-                            }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: Appearance.animation.elementMove.duration
+                            easing.type: Easing.OutCubic
                         }
+                    }
 
-                        StyledRectangularShadow {
-                            target: dockVisualBackground
+                    StyledRectangularShadow {
+                        target: dockVisualBackground
+                    }
+
+                    Rectangle {
+                        id: dockVisualBackground
+                        anchors.fill: parent
+                        color: ColorUtils.transparentize(Appearance.colors.colLayer0Base, 0.06)
+                        border.width: 1
+                        border.color: Appearance.colors.colLayer0Border
+                        radius: width / 2
+                    }
+
+                    ColumnLayout {
+                        id: dockRowVertical
+                        anchors.centerIn: parent
+                        spacing: 3
+
+                        DockApps {
+                            id: dockAppsVertical
+                            vertical: true
+                            buttonPadding: dockRoot.dockPadding
                         }
-
-                        Rectangle {
-                            id: dockVisualBackground
-                            anchors.fill: parent
-                            color: ColorUtils.transparentize(Appearance.colors.colLayer0Base, 0.06)
-                            border.width: 1
-                            border.color: Appearance.colors.colLayer0Border
-                            radius: width / 2
-                        }
-
-                        ColumnLayout {
-                            id: dockRowVertical
-                            anchors.centerIn: parent
-                            spacing: 3
-
-                            DockApps {
-                                id: dockAppsVertical
-                                vertical: true
-                                buttonPadding: dockRoot.dockPadding
-                            }
-                            DockSeparator { vertical: true; padding: dockRoot.dockPadding }
-                            DockButton {
-                                vertical: true
-                                onClicked: GlobalStates.overviewOpen = !GlobalStates.overviewOpen
-                                contentItem: MaterialSymbol {
-                                    anchors.fill: parent
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    font.pixelSize: parent.width / 2
-                                    text: "apps"
-                                    color: Appearance.colors.colOnLayer0
-                                }
+                        DockSeparator { vertical: true; padding: dockRoot.dockPadding }
+                        DockButton {
+                            vertical: true
+                            onClicked: GlobalStates.overviewOpen = !GlobalStates.overviewOpen
+                            contentItem: MaterialSymbol {
+                                anchors.fill: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: parent.width / 2
+                                text: "apps"
+                                color: Appearance.colors.colOnLayer0
                             }
                         }
                     }
                 }
 
+                Item {
+                    id: dockInputRegion
+                    width: dockRoot.reveal ? dockRoot.dockWidth : dockRoot.hoverRegion
+                    height: dockBackground.height
+                    anchors {
+                        left: parent.left
+                        verticalCenter: parent.verticalCenter
+                    }
+                    z: 100
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        onEntered: {
+                            if (dockRoot.hoverRevealEnabled)
+                                dockRoot.hoverOpen = true;
+                        }
+                        onExited: {
+                            dockRoot.hoverOpen = false;
+                        }
+                    }
+                }
             }
         }
     }

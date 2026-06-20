@@ -1,6 +1,7 @@
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -18,9 +19,20 @@ DockButton {
 
     readonly property bool isSeparator: appToplevel.appId === "SEPARATOR"
     property var desktopEntry: DesktopEntries.heuristicLookup(appToplevel.appId)
+    readonly property string iconName: desktopEntry?.icon || AppSearch.guessIcon(appToplevel.appId)
+    readonly property string appLabel: desktopEntry?.name || appToplevel.appId || "?"
     enabled: !isSeparator
     implicitWidth: isSeparator ? 1 : squareSide
     implicitHeight: isSeparator ? 1 : (vertical ? squareSide : background.implicitHeight)
+
+    function iconSource(icon) {
+        if (!icon) return "";
+        if (icon.startsWith("/")) return "file://" + icon;
+        const resolved = Quickshell.iconPath(icon, true);
+        if (resolved && resolved.startsWith("/")) return "file://" + resolved;
+        if (resolved) return resolved;
+        return "";
+    }
 
     Connections {
         target: DesktopEntries
@@ -28,6 +40,10 @@ DockButton {
         function onApplicationsChanged() {
             root.desktopEntry = DesktopEntries.heuristicLookup(appToplevel.appId);
         }
+    }
+
+    onAppToplevelChanged: {
+        root.desktopEntry = DesktopEntries.heuristicLookup(appToplevel.appId);
     }
 
     Loader {
@@ -74,40 +90,62 @@ DockButton {
         root.desktopEntry?.execute();
     }
 
-    contentItem: Loader {
-        active: !isSeparator
-        sourceComponent: Item {
-            anchors.fill: parent
+    contentItem: Item {
+        implicitWidth: root.squareSide
+        implicitHeight: root.squareSide
+        visible: !root.isSeparator
 
-            IconImage {
-                id: iconImage
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    verticalCenter: parent.verticalCenter
-                    verticalCenterOffset: appToplevel.toplevels.length > 0 ? -3 : 0
-                }
-                visible: !root.isSeparator
-                source: Quickshell.iconPath(AppSearch.guessIcon(appToplevel.appId), "image-missing")
-                implicitSize: root.iconSize
+        Item {
+            id: iconWrapper
+            anchors {
+                horizontalCenter: parent.horizontalCenter
+                verticalCenter: parent.verticalCenter
+                verticalCenterOffset: appToplevel.toplevels.length > 0 ? -3 : 0
             }
+            width: root.iconSize
+            height: root.iconSize
 
-            RowLayout {
-                spacing: 3
-                anchors {
-                    top: iconImage.bottom
-                    topMargin: 2
-                    horizontalCenter: parent.horizontalCenter
+                IconImage {
+                    id: iconImage
+                    anchors.fill: parent
+                    source: root.iconSource(root.iconName)
+                    implicitSize: root.iconSize
+                    asynchronous: true
+                    mipmap: true
                 }
-                Repeater {
-                    model: Math.min(appToplevel.toplevels.length, 3)
-                    delegate: Rectangle {
-                        required property int index
-                        radius: Appearance.rounding.full
-                        implicitWidth: (appToplevel.toplevels.length <= 3) ? 
-                            root.countDotWidth : root.countDotHeight // Circles when too many
-                        implicitHeight: root.countDotHeight
-                        color: appIsActive ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.4)
-                    }
+
+                Rectangle {
+                    visible: iconImage.source === "" || iconImage.status === Image.Error
+                    anchors.fill: parent
+                radius: 10
+                color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.25)
+
+                StyledText {
+                    anchors.centerIn: parent
+                    text: root.appLabel.charAt(0).toUpperCase()
+                    font.pixelSize: 22
+                    font.weight: Font.Bold
+                    color: Appearance.colors.colOnPrimary
+                }
+            }
+        }
+
+        RowLayout {
+            spacing: 3
+            anchors {
+                top: iconWrapper.bottom
+                topMargin: 2
+                horizontalCenter: parent.horizontalCenter
+            }
+            Repeater {
+                model: Math.min(appToplevel.toplevels.length, 3)
+                delegate: Rectangle {
+                    required property int index
+                    radius: Appearance.rounding.full
+                    implicitWidth: (appToplevel.toplevels.length <= 3) ? 
+                        root.countDotWidth : root.countDotHeight // Circles when too many
+                    implicitHeight: root.countDotHeight
+                    color: appIsActive ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.4)
                 }
             }
         }
