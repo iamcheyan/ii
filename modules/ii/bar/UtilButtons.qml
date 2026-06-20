@@ -1,4 +1,5 @@
 import qs
+import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
@@ -28,6 +29,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: screenshotButton.implicitWidth
                 implicitHeight: screenshotButton.implicitHeight
+                property bool hovered: screenshotButton.hovered
 
                 RippleButton {
                     id: screenshotButton
@@ -57,8 +59,12 @@ Item {
                     horizontalAlignment: Qt.AlignHCenter
                     fill: 1
                     text: "screenshot_region"
-                    iconSize: Appearance.font.pixelSize.large
+                    iconSize: Appearance.font.pixelSize.larger
                     color: Appearance.colors.colOnLayer2
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("Screenshot tool")
                 }
 
                 Loader {
@@ -93,12 +99,21 @@ Item {
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: Quickshell.execDetached(["hyprpicker", "-a"])
-                MaterialSymbol {
-                    horizontalAlignment: Qt.AlignHCenter
-                    fill: 1
-                    text: "colorize"
-                    iconSize: Appearance.font.pixelSize.large
-                    color: Appearance.colors.colOnLayer2
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    property bool hovered: parent.hovered
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Qt.AlignHCenter
+                        fill: 1
+                        text: "colorize"
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnLayer2
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Color picker")
+                    }
                 }
             }
         }
@@ -109,12 +124,21 @@ Item {
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: Quickshell.execDetached(["wpctl", "set-mute", "@DEFAULT_SOURCE@", "toggle"])
-                MaterialSymbol {
-                    horizontalAlignment: Qt.AlignHCenter
-                    fill: 0
-                    text: Pipewire.defaultAudioSource?.audio?.muted ? "mic_off" : "mic"
-                    iconSize: Appearance.font.pixelSize.large
-                    color: Appearance.colors.colOnLayer2
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    property bool hovered: parent.hovered
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Qt.AlignHCenter
+                        fill: 0
+                        text: Pipewire.defaultAudioSource?.audio?.muted ? "mic_off" : "mic"
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnLayer2
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Microphone")
+                    }
                 }
             }
         }
@@ -131,12 +155,21 @@ Item {
                         Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --mode dark --noswitch`])
                     }
                 }
-                MaterialSymbol {
-                    horizontalAlignment: Qt.AlignHCenter
-                    fill: 0
-                    text: Appearance.m3colors.darkmode ? "light_mode" : "dark_mode"
-                    iconSize: Appearance.font.pixelSize.large
-                    color: Appearance.colors.colOnLayer2
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    property bool hovered: parent.hovered
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Qt.AlignHCenter
+                        fill: 0
+                        text: Appearance.m3colors.darkmode ? "light_mode" : "dark_mode"
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnLayer2
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Dark Mode")
+                    }
                 }
             }
         }
@@ -160,16 +193,25 @@ Item {
                         PowerProfiles.profile = PowerProfiles.profile == PowerProfile.Balanced ? PowerProfile.PowerSaver : PowerProfile.Balanced
                     }
                 }
-                MaterialSymbol {
-                    horizontalAlignment: Qt.AlignHCenter
-                    fill: 0
-                    text: switch(PowerProfiles.profile) {
-                        case PowerProfile.PowerSaver: return "energy_savings_leaf"
-                        case PowerProfile.Balanced: return "airwave"
-                        case PowerProfile.Performance: return "local_fire_department"
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    property bool hovered: parent.hovered
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        horizontalAlignment: Qt.AlignHCenter
+                        fill: 0
+                        text: switch(PowerProfiles.profile) {
+                            case PowerProfile.PowerSaver: return "energy_savings_leaf"
+                            case PowerProfile.Balanced: return "airwave"
+                            case PowerProfile.Performance: return "local_fire_department"
+                        }
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnLayer2
                     }
-                    iconSize: Appearance.font.pixelSize.large
-                    color: Appearance.colors.colOnLayer2
+                    StyledToolTip {
+                        text: Translation.tr("Click to cycle through power profiles")
+                    }
                 }
             }
         }

@@ -245,12 +245,20 @@ Item { // Bar content region
                     GlobalStates.barDialogType = "bluetooth";
                     GlobalStates.barDialogOpen = true;
                 }
-                MaterialSymbol {
-                    anchors.centerIn: parent
-                    fill: 1
-                    text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
-                    iconSize: Appearance.font.pixelSize.larger
-                    color: Appearance.colors.colOnLayer0
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    property bool hovered: parent.hovered
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        fill: 1
+                        text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnLayer0
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Bluetooth")
+                    }
                 }
             }
 
@@ -262,12 +270,20 @@ Item { // Bar content region
                     GlobalStates.barDialogType = "wifi";
                     GlobalStates.barDialogOpen = true;
                 }
-                MaterialSymbol {
-                    anchors.centerIn: parent
-                    fill: 1
-                    text: Network.materialSymbol
-                    iconSize: Appearance.font.pixelSize.larger
-                    color: Appearance.colors.colOnLayer0
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    property bool hovered: parent.hovered
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        fill: 1
+                        text: Network.materialSymbol
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnLayer0
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Connect to Wi-Fi")
+                    }
                 }
             }
 
@@ -279,12 +295,20 @@ Item { // Bar content region
                     GlobalStates.barDialogType = "clipboard";
                     GlobalStates.barDialogOpen = true;
                 }
-                MaterialSymbol {
-                    anchors.centerIn: parent
-                    fill: 1
-                    text: "content_paste"
-                    iconSize: Appearance.font.pixelSize.larger
-                    color: Appearance.colors.colOnLayer0
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    property bool hovered: parent.hovered
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        fill: 1
+                        text: "content_paste"
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: Appearance.colors.colOnLayer0
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Clipboard")
+                    }
                 }
             }
 
@@ -309,7 +333,7 @@ Item { // Bar content region
                         anchors.centerIn: parent
                         fill: 1
                         text: Hyprsunset.temperatureActive ? "bedtime" : "bedtime_off"
-                        iconSize: Appearance.font.pixelSize.normal
+                        iconSize: Appearance.font.pixelSize.larger
                         color: Hyprsunset.temperatureActive ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                     }
                     StyledToolTip {
@@ -331,7 +355,7 @@ Item { // Bar content region
                         anchors.centerIn: parent
                         fill: 1
                         text: "free_cancellation"
-                        iconSize: Appearance.font.pixelSize.normal
+                        iconSize: Appearance.font.pixelSize.larger
                         color: Idle.inhibit ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                     }
                     StyledToolTip {
@@ -356,7 +380,7 @@ Item { // Bar content region
                         anchors.centerIn: parent
                         fill: 1
                         text: Audio.sink?.audio?.muted ? "volume_off" : "volume_up"
-                        iconSize: Appearance.font.pixelSize.normal
+                        iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer0
                     }
                     StyledToolTip {
