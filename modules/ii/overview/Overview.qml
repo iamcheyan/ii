@@ -45,7 +45,7 @@ Scope {
     function dispatchFocusWorkspace(wsId) {
         if (wsId < 1)
             return;
-        Hyprland.dispatch(`hl.dsp.focus({ workspace = ${wsId} })`);
+        Quickshell.execDetached(["hyprctl", "dispatch", "workspace", "" + wsId]);
     }
 
     function focusOverviewWorkspace(wsId) {
@@ -53,7 +53,9 @@ Scope {
             return;
         GlobalStates.overviewFocusedWorkspaceId = wsId;
         overviewScope.dispatchFocusWorkspace(wsId);
-        Qt.callLater(overviewScope.syncOverviewScreen);
+        if (!overviewScope.overviewGrabbed) {
+            Qt.callLater(overviewScope.syncOverviewScreen);
+        }
     }
 
     function navigateOverviewByIndex(delta) {
@@ -91,9 +93,12 @@ Scope {
         if (GlobalStates.overviewOpen && overviewScope.overviewGrabbed) {
             overviewScope.cycleOverviewWorkspace(dir);
         } else {
-            GlobalStates.overviewOpen = true;
             overviewScope.overviewGrabbed = true;
-            Qt.callLater(() => overviewScope.cycleOverviewWorkspace(dir));
+            GlobalStates.overviewOpen = true;
+            Qt.callLater(() => {
+                overviewScope.cycleOverviewWorkspace(dir);
+                overviewScope.requestOverviewFocus();
+            });
         }
     }
 
@@ -171,6 +176,7 @@ Scope {
         WlrLayershell.keyboardFocus: overviewScope.overviewGrabbed
             ? WlrKeyboardFocus.Exclusive
             : (GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
+        exclusionMode: ExclusionMode.Ignore
         color: "transparent"
 
         mask: Region {
@@ -197,7 +203,8 @@ Scope {
                     searchWidget.cancelSearch();
                     overviewScope.syncOverviewScreen();
                     GlobalStates.overviewFocusedWorkspaceId = overviewScope.currentWorkspaceId();
-                    GlobalFocusGrab.addDismissable(panelWindow);
+                    if (!overviewScope.overviewGrabbed)
+                        GlobalFocusGrab.addDismissable(panelWindow);
                     Qt.callLater(() => overviewScope.requestOverviewFocus());
                 }
             }
@@ -206,7 +213,8 @@ Scope {
         Connections {
             target: GlobalFocusGrab
             function onDismissed() {
-                GlobalStates.overviewOpen = false;
+                if (!overviewScope.overviewGrabbed)
+                    GlobalStates.overviewOpen = false;
             }
         }
 
@@ -248,9 +256,21 @@ Scope {
             }
 
             Connections {
+                target: GlobalStates
+                function onSuperDownChanged() {
+                    if (overviewScope.overviewGrabbed && !GlobalStates.superDown)
+                        overviewScope.commitGrabbedMode();
+                }
+            }
+
+            Connections {
                 target: overviewScope
                 function onRequestOverviewFocus() {
                     if (overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed)
+                        overviewKeyHandler.forceActiveFocus();
+                }
+                function onOverviewGrabbedChanged() {
+                    if (overviewScope.overviewGrabbed)
                         overviewKeyHandler.forceActiveFocus();
                 }
             }
