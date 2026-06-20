@@ -3,6 +3,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -258,14 +259,18 @@ PanelWindow {
                                 font.pixelSize: 14
                             }
 
-                            TextInput {
+                            TextField {
                                 id: searchField
                                 anchors.fill: parent
                                 color: "#f0f0f5"
                                 selectionColor: "#3b82f6"
+                                selectedTextColor: "#ffffff"
                                 font.family: launcher.fontStack
                                 font.pixelSize: 14
                                 verticalAlignment: TextInput.AlignVCenter
+                                background: null
+                                padding: 0
+                                renderType: Text.NativeRendering
                                 onTextChanged: launcher.buildFilteredList()
                                 Keys.onEscapePressed: GlobalStates.appLauncherOpen = false
                                 Keys.onReturnPressed: {
