@@ -50,36 +50,38 @@ Singleton {
         return Math.floor((Math.max(workspaceId, 1) - 1) / size) * size;
     }
 
-    function workspaceIdsOnMonitor(monitorName) {
-        if (!monitorName)
-            return [];
-        return root.workspaces
-            .filter(ws => ws.monitor === monitorName && root.isRegularWorkspace(ws) && ws.windows > 0)
-            .map(ws => ws.id)
-            .sort((a, b) => a - b);
-    }
-
     function isRegularWorkspace(ws) {
         if (!ws?.name)
             return true;
         return !ws.name.startsWith("special:");
     }
 
-    // Per-monitor overview: existing workspaces + one trailing empty slot
-    function overviewWorkspaceEntriesOnMonitor(monitorName) {
-        if (!monitorName)
-            return [{ id: 1, isTrailingEmpty: true }];
+    // Global overview: workspaces with windows, sorted by id, plus one trailing empty slot.
+    function overviewWorkspaceEntriesGlobal() {
+        const regularWorkspaces = root.workspaces
+            .filter(ws => root.isRegularWorkspace(ws) && ws.windows > 0)
+            .sort((a, b) => a.id - b.id);
 
-        const ids = root.workspaceIdsOnMonitor(monitorName);
-        const model = ids.map(id => ({ id, isTrailingEmpty: false }));
+        const seen = {};
+        let model = regularWorkspaces.reduce((entries, ws) => {
+            if (ws.id < 1 || ws.id > 100 || seen[ws.id])
+                return entries;
+            seen[ws.id] = true;
+            entries.push({
+                id: ws.id,
+                monitorName: ws.monitor ?? "",
+                isTrailingEmpty: false
+            });
+            return entries;
+        }, []);
 
         if (model.length === 0) {
-            const monitorData = root.monitors.find(m => m.name === monitorName);
-            const activeId = monitorData?.activeWorkspace?.id ?? 0;
-            if (activeId >= 1 && activeId <= 100)
-                model.push({ id: activeId, isTrailingEmpty: false });
-            else
-                model.push({ id: 1, isTrailingEmpty: false });
+            const activeId = root.activeWorkspace?.id ?? 1;
+            model.push({
+                id: Math.max(1, Math.min(100, activeId)),
+                monitorName: root.activeWorkspace?.monitor ?? "",
+                isTrailingEmpty: false
+            });
         }
 
         let maxId = 0;
@@ -87,21 +89,19 @@ Singleton {
             maxId = Math.max(maxId, entry.id);
 
         const trailingId = maxId + 1;
-        if (trailingId <= 100 && !ids.includes(trailingId))
-            model.push({ id: trailingId, isTrailingEmpty: true });
+        if (trailingId <= 100 && !seen[trailingId]) {
+            model.push({
+                id: trailingId,
+                monitorName: "",
+                isTrailingEmpty: true
+            });
+        }
 
         return model;
     }
 
     function workspaceDataForId(workspaceId) {
         return root.workspaceById[workspaceId] ?? null;
-    }
-
-    function workspaceBelongsToMonitor(workspaceId, monitorName) {
-        if (!monitorName || workspaceId < 1)
-            return false;
-        const ws = root.workspaceById[workspaceId];
-        return ws !== undefined && ws.monitor === monitorName;
     }
 
     function clientForToplevel(toplevel) {

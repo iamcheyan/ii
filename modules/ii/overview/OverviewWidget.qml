@@ -21,7 +21,7 @@ Item {
     readonly property int highlightedWorkspaceId: (GlobalStates.overviewFocusedWorkspaceId > 0
         ? GlobalStates.overviewFocusedWorkspaceId
         : effectiveActiveWorkspaceId)
-    readonly property var overviewEntries: HyprlandData.overviewWorkspaceEntriesOnMonitor(root.monitor?.name)
+    readonly property var overviewEntries: HyprlandData.overviewWorkspaceEntriesGlobal()
     readonly property var overviewEntryIds: root.overviewEntries.map(entry => entry.id)
     readonly property int overviewGridColumns: Math.min(
         Math.max(root.overviewEntries.length, 1),
@@ -29,7 +29,7 @@ Item {
     readonly property int overviewGridRows: Math.max(
         1,
         Math.ceil(root.overviewEntries.length / root.overviewGridColumns))
-    property bool monitorIsFocused: (Hyprland.focusedMonitor?.name == monitor.name)
+    property bool monitorIsFocused: (Hyprland.focusedMonitor?.name == monitor?.name)
     property var windows: HyprlandData.windowList
     property var windowByAddress: HyprlandData.windowByAddress
     property var windowAddresses: HyprlandData.addresses
@@ -52,10 +52,6 @@ Item {
     property int windowZ: 1
     property int windowDraggingZ: 99999
     property real workspaceSpacing: 5
-
-    property int draggingFromWorkspace: -1
-    property int draggingTargetWorkspace: -1
-    property bool draggingTargetIsTrailing: false
 
     implicitWidth: overviewBackground.implicitWidth + Appearance.sizes.elevationMargin * 2
     implicitHeight: overviewBackground.implicitHeight + Appearance.sizes.elevationMargin * 2
@@ -87,7 +83,7 @@ Item {
     }
 
     function cycleOverviewWorkspace(dir) {
-        const model = root.overviewEntries;
+        const model = root.overviewEntries.filter(entry => !entry.isTrailingEmpty);
         if (model.length === 0)
             return;
 
@@ -98,7 +94,15 @@ Item {
         idx = (idx + dir + model.length) % model.length;
         const newWs = model[idx].id;
         GlobalStates.overviewFocusedWorkspaceId = newWs;
-        Hyprland.dispatch(`hl.dsp.focus({ workspace = ${newWs} })`);
+    }
+
+    function dispatchFocusWorkspace(wsId) {
+        if (wsId < 1)
+            return;
+        const ws = HyprlandData.workspaceDataForId(wsId);
+        if (ws?.monitor)
+            Hyprland.dispatch(`hl.dsp.focus({monitor="${ws.monitor}"})`);
+        Hyprland.dispatch(`hl.dsp.focus({ workspace = ${wsId} })`);
     }
 
     property Component windowComponent: OverviewWindow {}
@@ -148,6 +152,7 @@ Item {
                     required property var modelData
                     required property int index
                     property int workspaceValue: modelData.id
+                    property string monitorName: modelData.monitorName ?? ""
                     property bool isTrailingEmpty: modelData.isTrailingEmpty ?? false
                     property int colIndex: root.getEntryColumn(index)
                     property int rowIndex: root.getEntryRow(index)
@@ -185,6 +190,22 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                     }
 
+                    StyledText {
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            margins: 8
+                        }
+                        text: workspace.isTrailingEmpty
+                            ? Translation.tr("New workspace")
+                            : `${workspace.monitorName || Translation.tr("Hidden")} · ${workspace.workspaceValue}`
+                        font {
+                            pixelSize: Appearance.font.pixelSize.smaller
+                            weight: Font.Medium
+                        }
+                        color: ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.22)
+                    }
+
                     MouseArea {
                         id: workspaceArea
                         anchors.fill: parent
@@ -199,13 +220,13 @@ Item {
                             }
                         }
                         onPressed: {
-                            if (root.draggingTargetWorkspace === -1) {
+                            if (GlobalStates.overviewDraggingTargetWorkspace === -1) {
                                 if (workspace.isTrailingEmpty) {
                                     GlobalStates.overviewOpen = false;
                                     Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);
                                 } else {
                                     GlobalStates.overviewOpen = false;
-                                    Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspace.workspaceValue} })`);
+                                    root.dispatchFocusWorkspace(workspace.workspaceValue);
                                 }
                             }
                         }
@@ -214,16 +235,16 @@ Item {
                     DropArea {
                         anchors.fill: parent
                         onEntered: {
-                            root.draggingTargetWorkspace = workspace.workspaceValue
-                            root.draggingTargetIsTrailing = workspace.isTrailingEmpty
-                            if (root.draggingFromWorkspace == root.draggingTargetWorkspace) return;
+                            GlobalStates.overviewDraggingTargetWorkspace = workspace.workspaceValue
+                            GlobalStates.overviewDraggingTargetIsTrailing = workspace.isTrailingEmpty
+                            if (GlobalStates.overviewDraggingFromWorkspace == GlobalStates.overviewDraggingTargetWorkspace) return;
                             hoveredWhileDragging = true
                         }
                         onExited: {
                             hoveredWhileDragging = false
-                            if (root.draggingTargetWorkspace == workspace.workspaceValue) {
-                                root.draggingTargetWorkspace = -1
-                                root.draggingTargetIsTrailing = false
+                            if (GlobalStates.overviewDraggingTargetWorkspace == workspace.workspaceValue) {
+                                GlobalStates.overviewDraggingTargetWorkspace = -1
+                                GlobalStates.overviewDraggingTargetIsTrailing = false
                             }
                         }
                     }
@@ -246,10 +267,7 @@ Item {
                             var win = windowByAddress[address]
                             if (!win?.workspace?.id)
                                 return false;
-                            if (!root.overviewEntryIds.includes(win.workspace.id))
-                                return false;
-                            return HyprlandData.workspaceBelongsToMonitor(
-                                win.workspace.id, root.monitor?.name);
+                            return root.overviewEntryIds.includes(win.workspace.id);
                         })
                     }
                 }
@@ -273,8 +291,8 @@ Item {
                     property int workspaceRowIndex: root.getEntryRow(workspaceEntryIndex)
                     xOffset: (root.workspaceImplicitWidth + workspaceSpacing) * workspaceColIndex
                     yOffset: (root.workspaceImplicitHeight + workspaceSpacing) * workspaceRowIndex
-                    property real xWithinWorkspaceWidget: Math.max((windowData?.at[0] - (monitor?.x ?? 0) - monitorData?.reserved[0]) * root.scale, 0)
-                    property real yWithinWorkspaceWidget: Math.max((windowData?.at[1] - (monitor?.y ?? 0) - monitorData?.reserved[1]) * root.scale, 0)
+                    property real xWithinWorkspaceWidget: Math.max((windowData?.at[0] - (monitor?.x ?? 0) - monitorData?.reserved[0]) * window.widthRatio * root.scale, 0)
+                    property real yWithinWorkspaceWidget: Math.max((windowData?.at[1] - (monitor?.y ?? 0) - monitorData?.reserved[1]) * window.heightRatio * root.scale, 0)
 
                     // Radius
                     property real minRadius: Appearance.rounding.small
@@ -331,7 +349,7 @@ Item {
                             }
                         }
                         onPressed: (mouse) => {
-                            root.draggingFromWorkspace = windowData?.workspace.id
+                            GlobalStates.overviewDraggingFromWorkspace = windowData?.workspace.id
                             window.pressed = true
                             window.Drag.active = true
                             window.Drag.source = window
@@ -340,11 +358,13 @@ Item {
                             // console.log(`[OverviewWindow] Dragging window ${windowData?.address} from position (${window.x}, ${window.y})`)
                         }
                         onReleased: {
-                            const targetWorkspace = root.draggingTargetWorkspace
-                            const targetIsTrailing = root.draggingTargetIsTrailing
+                            const targetWorkspace = GlobalStates.overviewDraggingTargetWorkspace
+                            const targetIsTrailing = GlobalStates.overviewDraggingTargetIsTrailing
                             window.pressed = false
                             window.Drag.active = false
-                            root.draggingFromWorkspace = -1
+                            GlobalStates.overviewDraggingFromWorkspace = -1
+                            GlobalStates.overviewDraggingTargetWorkspace = -1
+                            GlobalStates.overviewDraggingTargetIsTrailing = false
                             if (targetWorkspace !== -1 && targetWorkspace !== windowData?.workspace.id) {
                                 if (targetIsTrailing) {
                                     Hyprland.dispatch(`hl.dsp.window.move({ workspace = "empty", follow = false, window = "address:${window.windowData?.address}" })`)
@@ -360,7 +380,7 @@ Item {
                                 }
                                 const percentageX = (window.x - xOffset) / root.workspaceImplicitWidth
                                 const percentageY = (window.y - yOffset) / root.workspaceImplicitHeight
-                                Hyprland.dispatch(`hl.dsp.window.move({ x = "${percentageX * root.screen.width}", y = "${percentageY * root.screen.height}", window = "address:${window.windowData?.address}" })`)
+                                Hyprland.dispatch(`hl.dsp.window.move({ x = "${percentageX * (monitor?.width ?? root.screen.width)}", y = "${percentageY * (monitor?.height ?? root.screen.height)}", window = "address:${window.windowData?.address}" })`)
                             }
                         }
                         onClicked: (event) => {
@@ -399,7 +419,7 @@ Item {
                 property bool workspaceAtLeft: colIndex === 0
                 property bool workspaceAtRight: colIndex === root.overviewGridColumns - 1
                 property bool workspaceAtTop: rowIndex === 0
-                property bool workspaceAtBottom: rowIndex === Config.options.overview.rows - 1
+                property bool workspaceAtBottom: rowIndex === root.overviewGridRows - 1
                 topLeftRadius: (workspaceAtLeft && workspaceAtTop) ? root.largeWorkspaceRadius : root.smallWorkspaceRadius
                 topRightRadius: (workspaceAtRight && workspaceAtTop) ? root.largeWorkspaceRadius : root.smallWorkspaceRadius
                 bottomLeftRadius: (workspaceAtLeft && workspaceAtBottom) ? root.largeWorkspaceRadius : root.smallWorkspaceRadius

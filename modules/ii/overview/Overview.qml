@@ -15,16 +15,17 @@ Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
     property bool overviewGrabbed: false
+    property string searchingText: ""
 
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
         ?? Quickshell.screens[0]
         ?? null
 
     signal requestOverviewFocus()
+    signal requestSearchFocus()
 
-    function overviewModelForFocusedMonitor() {
-        return HyprlandData.overviewWorkspaceEntriesOnMonitor(
-            overviewScope.focusedMonitorName());
+    function overviewModel() {
+        return HyprlandData.overviewWorkspaceEntriesGlobal();
     }
 
     function overviewGridColumnsForModel(model) {
@@ -45,32 +46,31 @@ Scope {
     function dispatchFocusWorkspace(wsId) {
         if (wsId < 1)
             return;
+        const ws = HyprlandData.workspaceDataForId(wsId);
+        if (ws?.monitor)
+            Hyprland.dispatch(`hl.dsp.focus({monitor="${ws.monitor}"})`);
         Hyprland.dispatch(`hl.dsp.focus({ workspace = ${wsId} })`);
     }
 
-    function focusOverviewWorkspace(wsId) {
+    function selectOverviewWorkspace(wsId) {
         if (wsId < 1)
             return;
         GlobalStates.overviewFocusedWorkspaceId = wsId;
-        overviewScope.dispatchFocusWorkspace(wsId);
-        if (!overviewScope.overviewGrabbed) {
-            Qt.callLater(overviewScope.syncOverviewScreen);
-        }
     }
 
     function navigateOverviewByIndex(delta) {
-        const model = overviewScope.overviewModelForFocusedMonitor();
+        const model = overviewScope.overviewModel().filter(entry => !entry.isTrailingEmpty);
         if (model.length === 0)
             return;
 
         const ws = overviewScope.overviewFocusedWorkspaceId();
         let idx = overviewScope.overviewIndexForWorkspace(model, ws);
         idx = (idx + delta + model.length) % model.length;
-        overviewScope.focusOverviewWorkspace(model[idx].id);
+        overviewScope.selectOverviewWorkspace(model[idx].id);
     }
 
     function navigateOverviewGrid(deltaRow, deltaCol) {
-        const model = overviewScope.overviewModelForFocusedMonitor();
+        const model = overviewScope.overviewModel();
         const n = model.length;
         if (n === 0)
             return;
@@ -103,16 +103,18 @@ Scope {
     }
 
     function commitGrabbedMode() {
+        if (GlobalStates.overviewFocusedWorkspaceId > 0)
+            overviewScope.dispatchFocusWorkspace(GlobalStates.overviewFocusedWorkspaceId);
         overviewScope.overviewGrabbed = false;
         GlobalStates.overviewOpen = false;
     }
 
     function overviewNavigationActive() {
         return GlobalStates.overviewOpen
-            && panelWindow.searchingText === "";
+            && overviewScope.searchingText === "";
     }
 
-    function handleOverviewNavigationKey(event) {
+    function handleOverviewNavigationKey(event, searchWidget) {
         if (!overviewScope.overviewNavigationActive())
             return;
 
@@ -139,9 +141,8 @@ Scope {
         }
     }
 
-    function syncOverviewScreen() {
-        if (overviewScope.focusedScreen)
-            panelWindow.screen = overviewScope.focusedScreen;
+    function isFocusedScreen(screen) {
+        return screen?.name === overviewScope.focusedScreen?.name;
     }
 
     function currentWorkspaceId() {
@@ -151,185 +152,207 @@ Scope {
         return HyprlandData.monitorActiveWorkspaceId(monitor) || HyprlandData.activeWorkspace?.id || 1;
     }
 
-    function focusedMonitorName() {
-        return Hyprland.focusedMonitor?.name ?? "";
-    }
-
     Connections {
         target: Hyprland
         function onFocusedMonitorChanged() {
             if (GlobalStates.overviewOpen)
-                overviewScope.syncOverviewScreen();
+                Qt.callLater(() => overviewScope.requestOverviewFocus());
         }
     }
 
-    PanelWindow {
-        id: panelWindow
-        property string searchingText: ""
-        screen: overviewScope.focusedScreen
-        readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-        property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
-        visible: GlobalStates.overviewOpen && overviewScope.focusedScreen
+    Variants {
+        model: Quickshell.screens
 
-        WlrLayershell.namespace: "quickshell:overview"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: overviewScope.overviewGrabbed
-            ? WlrKeyboardFocus.Exclusive
-            : (GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
+        LazyLoader {
+            id: overviewPanelLoader
+            required property ShellScreen modelData
+            active: true
 
-        mask: Region {
-            item: GlobalStates.overviewOpen ? columnLayout : null
-        }
+            component: PanelWindow {
+            id: panelWindow
+            screen: overviewPanelLoader.modelData
+            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
+            readonly property bool isFocusedOverviewWindow: overviewScope.isFocusedScreen(panelWindow.screen)
+            visible: GlobalStates.overviewOpen
+            property string searchingText: ""
 
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-
-        Connections {
-            target: GlobalStates
-            function onOverviewOpenChanged() {
-                if (!GlobalStates.overviewOpen) {
-                    overviewScope.overviewGrabbed = false;
-                    GlobalStates.overviewFocusedWorkspaceId = -1;
-                    searchWidget.disableExpandAnimation();
-                    overviewScope.dontAutoCancelSearch = false;
-                    GlobalFocusGrab.dismiss();
-                } else {
-                    searchWidget.cancelSearch();
-                    overviewScope.syncOverviewScreen();
-                    GlobalStates.overviewFocusedWorkspaceId = overviewScope.currentWorkspaceId();
-                    if (!overviewScope.overviewGrabbed)
-                        GlobalFocusGrab.addDismissable(panelWindow);
-                    Qt.callLater(() => overviewScope.requestOverviewFocus());
-                }
-            }
-        }
-
-        Connections {
-            target: GlobalFocusGrab
-            function onDismissed() {
-                if (!overviewScope.overviewGrabbed)
-                    GlobalStates.overviewOpen = false;
-            }
-        }
-
-        implicitWidth: columnLayout.implicitWidth
-        implicitHeight: columnLayout.implicitHeight
-
-        function setSearchingText(text) {
-            searchWidget.setSearchingText(text);
-            searchWidget.focusFirstItem();
-        }
-
-        Item {
-            id: overviewKeyHandler
-            anchors.fill: parent
-            z: 999
-            focus: overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed
-
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) {
-                    GlobalStates.overviewOpen = false;
-                    event.accepted = true;
-                    return;
-                }
-                if (overviewScope.overviewGrabbed && event.key === Qt.Key_Tab) {
-                    const backward = (event.modifiers & Qt.ShiftModifier) !== 0;
-                    overviewScope.cycleOverviewWorkspace(backward ? -1 : 1);
-                    event.accepted = true;
-                    return;
-                }
-                overviewScope.handleOverviewNavigationKey(event);
+            Binding {
+                target: panelWindow
+                property: "searchingText"
+                value: overviewScope.searchingText
             }
 
-            Keys.onReleased: event => {
-                if (overviewScope.overviewGrabbed &&
-                    (event.key === Qt.Key_Super_L || event.key === Qt.Key_Super_R || event.key === Qt.Key_Meta)) {
-                    overviewScope.commitGrabbedMode();
-                    event.accepted = true;
+            onSearchingTextChanged: {
+                if (overviewScope.searchingText !== searchingText) {
+                    overviewScope.searchingText = searchingText;
                 }
+            }
+
+            WlrLayershell.namespace: "quickshell:overview"
+            WlrLayershell.layer: WlrLayer.Top
+            WlrLayershell.keyboardFocus: panelWindow.isFocusedOverviewWindow
+                ? (overviewScope.overviewGrabbed
+                    ? WlrKeyboardFocus.Exclusive
+                    : (GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None))
+                : WlrKeyboardFocus.None
+            exclusionMode: ExclusionMode.Ignore
+            color: "transparent"
+
+            mask: Region {
+                item: GlobalStates.overviewOpen ? columnLayout : null
+            }
+
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
             }
 
             Connections {
                 target: GlobalStates
-                function onSuperDownChanged() {
-                    if (overviewScope.overviewGrabbed && !GlobalStates.superDown)
-                        overviewScope.commitGrabbedMode();
-                }
-            }
-
-            Connections {
-                target: overviewScope
-                function onRequestOverviewFocus() {
-                    if (overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed)
-                        overviewKeyHandler.forceActiveFocus();
-                }
-                function onOverviewGrabbedChanged() {
-                    if (overviewScope.overviewGrabbed)
-                        overviewKeyHandler.forceActiveFocus();
-                }
-            }
-
-            Connections {
-                target: panelWindow
-                function onSearchingTextChanged() {
-                    if (overviewScope.overviewNavigationActive())
+                function onOverviewOpenChanged() {
+                    if (!GlobalStates.overviewOpen) {
+                        overviewScope.overviewGrabbed = false;
+                        GlobalStates.overviewFocusedWorkspaceId = -1;
+                        GlobalStates.overviewDraggingFromWorkspace = -1;
+                        GlobalStates.overviewDraggingTargetWorkspace = -1;
+                        GlobalStates.overviewDraggingTargetIsTrailing = false;
+                        searchWidget.disableExpandAnimation();
+                        overviewScope.searchingText = "";
+                        overviewScope.dontAutoCancelSearch = false;
+                        GlobalFocusGrab.dismiss();
+                    } else {
+                        searchWidget.cancelSearch();
+                        GlobalStates.overviewFocusedWorkspaceId = overviewScope.currentWorkspaceId();
+                        if (panelWindow.isFocusedOverviewWindow && !overviewScope.overviewGrabbed)
+                            GlobalFocusGrab.addDismissable(panelWindow);
                         Qt.callLater(() => overviewScope.requestOverviewFocus());
-                }
-            }
-        }
-
-        Column {
-            id: columnLayout
-            visible: GlobalStates.overviewOpen
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                verticalCenter: parent.verticalCenter
-            }
-            spacing: -8
-
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape)
-                    GlobalStates.overviewOpen = false;
-            }
-
-            SearchWidget {
-                id: searchWidget
-                anchors.horizontalCenter: parent.horizontalCenter
-                Synchronizer on searchingText {
-                    property alias source: panelWindow.searchingText
-                }
-            }
-
-            StyledFlickable {
-                id: overviewScroll
-                anchors.horizontalCenter: parent.horizontalCenter
-                clip: true
-                visible: (panelWindow.searchingText == "")
-                readonly property real availableHeight: panelWindow.height * 0.85 - searchWidget.implicitHeight
-                implicitWidth: overviewLoader.implicitWidth
-                implicitHeight: visible
-                    ? Math.min(overviewLoader.implicitHeight, Math.max(0, availableHeight))
-                    : 0
-                width: implicitWidth
-                height: implicitHeight
-                contentWidth: width
-                contentHeight: overviewLoader.implicitHeight
-
-                Loader {
-                    id: overviewLoader
-                    active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
-                    sourceComponent: OverviewWidget {
-                        screen: panelWindow.screen
-                        visible: (panelWindow.searchingText == "")
                     }
                 }
             }
+
+            Connections {
+                target: GlobalFocusGrab
+                function onDismissed() {
+                    if (!overviewScope.overviewGrabbed)
+                        GlobalStates.overviewOpen = false;
+                }
+            }
+
+            implicitWidth: columnLayout.implicitWidth
+            implicitHeight: columnLayout.implicitHeight
+
+            Item {
+                id: overviewKeyHandler
+                anchors.fill: parent
+                z: 999
+                focus: panelWindow.isFocusedOverviewWindow
+                    && (overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed)
+
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Escape) {
+                        GlobalStates.overviewOpen = false;
+                        event.accepted = true;
+                        return;
+                    }
+                    if (overviewScope.overviewGrabbed && event.key === Qt.Key_Tab) {
+                        const backward = (event.modifiers & Qt.ShiftModifier) !== 0;
+                        overviewScope.cycleOverviewWorkspace(backward ? -1 : 1);
+                        event.accepted = true;
+                        return;
+                    }
+                    overviewScope.handleOverviewNavigationKey(event, searchWidget);
+                }
+
+                Keys.onReleased: event => {
+                    if (overviewScope.overviewGrabbed &&
+                        (event.key === Qt.Key_Super_L || event.key === Qt.Key_Super_R || event.key === Qt.Key_Meta)) {
+                        overviewScope.commitGrabbedMode();
+                        event.accepted = true;
+                    }
+                }
+
+                Connections {
+                    target: GlobalStates
+                    function onSuperDownChanged() {
+                        if (overviewScope.overviewGrabbed && !GlobalStates.superDown)
+                            overviewScope.commitGrabbedMode();
+                    }
+                }
+
+                Connections {
+                    target: overviewScope
+                    function onRequestOverviewFocus() {
+                        if (panelWindow.isFocusedOverviewWindow
+                            && (overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed))
+                            overviewKeyHandler.forceActiveFocus();
+                    }
+                    function onRequestSearchFocus() {
+                        if (!panelWindow.isFocusedOverviewWindow)
+                            return;
+                        searchWidget.focusSearchInput();
+                        searchWidget.focusFirstItem();
+                    }
+                    function onOverviewGrabbedChanged() {
+                        if (panelWindow.isFocusedOverviewWindow && overviewScope.overviewGrabbed)
+                            overviewKeyHandler.forceActiveFocus();
+                    }
+                    function onSearchingTextChanged() {
+                        if (overviewScope.overviewNavigationActive())
+                            Qt.callLater(() => overviewScope.requestOverviewFocus());
+                    }
+                }
+            }
+
+            Column {
+                id: columnLayout
+                visible: GlobalStates.overviewOpen
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                spacing: -8
+
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Escape)
+                        GlobalStates.overviewOpen = false;
+                }
+
+                SearchWidget {
+                    id: searchWidget
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    Synchronizer on searchingText {
+                        property alias source: panelWindow.searchingText
+                    }
+                }
+
+                StyledFlickable {
+                    id: overviewScroll
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    clip: true
+                    visible: (overviewScope.searchingText == "")
+                    readonly property real availableHeight: panelWindow.height * 0.85 - searchWidget.implicitHeight
+                    implicitWidth: overviewLoader.implicitWidth
+                    implicitHeight: visible
+                        ? Math.min(overviewLoader.implicitHeight, Math.max(0, availableHeight))
+                        : 0
+                    width: implicitWidth
+                    height: implicitHeight
+                    contentWidth: width
+                    contentHeight: overviewLoader.implicitHeight
+
+                    Loader {
+                        id: overviewLoader
+                        active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
+                        sourceComponent: OverviewWidget {
+                            screen: panelWindow.screen
+                            visible: (overviewScope.searchingText == "")
+                        }
+                    }
+                }
+            }
+        }
         }
     }
 
@@ -339,8 +362,9 @@ Scope {
             return;
         }
         overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.clipboard);
+        overviewScope.searchingText = Config.options.search.prefix.clipboard;
         GlobalStates.overviewOpen = true;
+        Qt.callLater(() => overviewScope.requestSearchFocus());
     }
 
     function toggleEmojis() {
@@ -349,8 +373,9 @@ Scope {
             return;
         }
         overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.emojis);
+        overviewScope.searchingText = Config.options.search.prefix.emojis;
         GlobalStates.overviewOpen = true;
+        Qt.callLater(() => overviewScope.requestSearchFocus());
     }
 
     IpcHandler {

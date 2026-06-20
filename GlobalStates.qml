@@ -19,6 +19,9 @@ Singleton {
     property bool overlayOpen: false
     property bool overviewOpen: false
     property int overviewFocusedWorkspaceId: -1
+    property int overviewDraggingFromWorkspace: -1
+    property int overviewDraggingTargetWorkspace: -1
+    property bool overviewDraggingTargetIsTrailing: false
     property bool regionSelectorOpen: false
     property bool scheduleOpen: false
     property bool searchOpen: false
