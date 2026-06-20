@@ -14,6 +14,8 @@ import Quickshell.Hyprland
 Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
+    property real lastAltTabWheelCycleMs: 0
+    property int altTabWheelThrottleMs: 160
 
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
         ?? Quickshell.screens[0]
@@ -186,24 +188,30 @@ Scope {
 
     function openAltTabMode(initialDir) {
         const dir = initialDir === 0 ? 1 : initialDir;
-        const currentWs = overviewScope.currentWorkspaceId();
 
-        overviewScope.syncOverviewScreen();
-        overviewScope.dontAutoCancelSearch = true;
-        GlobalStates.overviewAltTabMode = true;
-        GlobalStates.overviewAltTabOriginalWorkspaceId = currentWs;
-        GlobalStates.overviewAltTabSelectedWorkspaceId = currentWs;
-
-        if (!GlobalStates.overviewOpen) {
-            GlobalStates.overviewOpen = true;
-            if (dir < 0)
-                Qt.callLater(() => overviewScope.cycleAltTabWorkspace(-1));
-        } else {
+        if (GlobalStates.overviewAltTabMode && GlobalStates.overviewOpen) {
             overviewScope.cycleAltTabWorkspace(dir);
+        } else {
+            const currentWs = overviewScope.currentWorkspaceId();
+            overviewScope.syncOverviewScreen();
+            overviewScope.dontAutoCancelSearch = true;
+            GlobalStates.overviewAltTabMode = true;
+            GlobalStates.overviewAltTabOriginalWorkspaceId = currentWs;
+            GlobalStates.overviewAltTabSelectedWorkspaceId = currentWs;
+            GlobalStates.overviewOpen = true;
+            Qt.callLater(() => overviewScope.cycleAltTabWorkspace(dir));
         }
 
         overviewScope.requestAltTabFocus();
         Qt.callLater(() => overviewScope.requestAltTabFocus());
+    }
+
+    function openAltTabModeFromWheel(initialDir) {
+        const now = Date.now();
+        if (now - overviewScope.lastAltTabWheelCycleMs < overviewScope.altTabWheelThrottleMs)
+            return;
+        overviewScope.lastAltTabWheelCycleMs = now;
+        overviewScope.openAltTabMode(initialDir);
     }
 
     function commitAltTab() {
@@ -293,7 +301,9 @@ Scope {
         color: "transparent"
 
         mask: Region {
-            item: GlobalStates.overviewOpen ? columnLayout : null
+            item: GlobalStates.overviewOpen
+                ? (GlobalStates.overviewAltTabMode ? altTabKeyHandler : columnLayout)
+                : null
         }
 
         anchors {
@@ -354,13 +364,17 @@ Scope {
             Keys.onPressed: event => overviewScope.handleAltTabKeyPressed(event)
             Keys.onReleased: event => overviewScope.handleAltTabKeyReleased(event)
 
-            WheelHandler {
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                onWheel: event => {
-                    if (event.angleDelta.y > 0)
-                        overviewScope.cycleAltTabWorkspace(-1);
-                    else if (event.angleDelta.y < 0)
-                        overviewScope.cycleAltTabWorkspace(1);
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+                hoverEnabled: true
+
+                onWheel: wheel => {
+                    if (wheel.angleDelta.y > 0)
+                        overviewScope.openAltTabModeFromWheel(-1);
+                    else if (wheel.angleDelta.y < 0)
+                        overviewScope.openAltTabModeFromWheel(1);
+                    wheel.accepted = true;
                 }
             }
 
@@ -539,6 +553,22 @@ Scope {
 
         onPressed: {
             overviewScope.openAltTabMode(-1);
+        }
+    }
+    GlobalShortcut {
+        name: "overviewAltTabWheelNext"
+        description: "Alt+wheel workspace overview: show or cycle next with throttling"
+
+        onPressed: {
+            overviewScope.openAltTabModeFromWheel(1);
+        }
+    }
+    GlobalShortcut {
+        name: "overviewAltTabWheelPrev"
+        description: "Alt+wheel workspace overview: show or cycle previous with throttling"
+
+        onPressed: {
+            overviewScope.openAltTabModeFromWheel(-1);
         }
     }
     GlobalShortcut {
