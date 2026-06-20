@@ -304,6 +304,7 @@ Item { // Bar content region
                 Item {
                     implicitWidth: 20
                     implicitHeight: 20
+                    property bool hovered: parent.hovered
                     MaterialSymbol {
                         anchors.centerIn: parent
                         fill: 1
@@ -325,6 +326,7 @@ Item { // Bar content region
                 Item {
                     implicitWidth: 20
                     implicitHeight: 20
+                    property bool hovered: parent.hovered
                     MaterialSymbol {
                         anchors.centerIn: parent
                         fill: 1
@@ -349,6 +351,7 @@ Item { // Bar content region
                 Item {
                     implicitWidth: 20
                     implicitHeight: 20
+                    property bool hovered: parent.hovered
                     MaterialSymbol {
                         anchors.centerIn: parent
                         fill: 1
