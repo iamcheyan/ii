@@ -2,7 +2,6 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
-import Qt.labs.synchronizer
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -13,16 +12,13 @@ import Quickshell.Hyprland
 
 Scope {
     id: overviewScope
-    property bool dontAutoCancelSearch: false
     property bool overviewGrabbed: false
-    property string searchingText: ""
 
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
         ?? Quickshell.screens[0]
         ?? null
 
     signal requestOverviewFocus()
-    signal requestSearchFocus()
 
     function overviewModel() {
         return HyprlandData.overviewWorkspaceEntriesGlobal();
@@ -110,21 +106,12 @@ Scope {
     }
 
     function overviewNavigationActive() {
-        return GlobalStates.overviewOpen
-            && overviewScope.searchingText === "";
+        return GlobalStates.overviewOpen;
     }
 
-    function handleOverviewNavigationKey(event, searchWidget) {
+    function handleOverviewNavigationKey(event) {
         if (!overviewScope.overviewNavigationActive())
             return;
-
-        if (event.text && event.text.length === 1 && event.key !== Qt.Key_Enter
-                && event.key !== Qt.Key_Return && event.text.charCodeAt(0) >= 0x20) {
-            searchWidget.focusSearchInput();
-            searchWidget.setSearchingText(event.text);
-            event.accepted = true;
-            return;
-        }
 
         if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
             overviewScope.navigateOverviewGrid(0, -1);
@@ -174,19 +161,6 @@ Scope {
             readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
             readonly property bool isFocusedOverviewWindow: overviewScope.isFocusedScreen(panelWindow.screen)
             visible: GlobalStates.overviewOpen
-            property string searchingText: ""
-
-            Binding {
-                target: panelWindow
-                property: "searchingText"
-                value: overviewScope.searchingText
-            }
-
-            onSearchingTextChanged: {
-                if (overviewScope.searchingText !== searchingText) {
-                    overviewScope.searchingText = searchingText;
-                }
-            }
 
             WlrLayershell.namespace: "quickshell:overview"
             WlrLayershell.layer: WlrLayer.Top
@@ -218,12 +192,8 @@ Scope {
                         GlobalStates.overviewDraggingFromWorkspace = -1;
                         GlobalStates.overviewDraggingTargetWorkspace = -1;
                         GlobalStates.overviewDraggingTargetIsTrailing = false;
-                        searchWidget.disableExpandAnimation();
-                        overviewScope.searchingText = "";
-                        overviewScope.dontAutoCancelSearch = false;
                         GlobalFocusGrab.dismiss();
                     } else {
-                        searchWidget.cancelSearch();
                         GlobalStates.overviewFocusedWorkspaceId = overviewScope.currentWorkspaceId();
                         if (panelWindow.isFocusedOverviewWindow && !overviewScope.overviewGrabbed)
                             GlobalFocusGrab.addDismissable(panelWindow);
@@ -262,7 +232,7 @@ Scope {
                         event.accepted = true;
                         return;
                     }
-                    overviewScope.handleOverviewNavigationKey(event, searchWidget);
+                    overviewScope.handleOverviewNavigationKey(event);
                 }
 
                 Keys.onReleased: event => {
@@ -288,67 +258,42 @@ Scope {
                             && (overviewScope.overviewNavigationActive() || overviewScope.overviewGrabbed))
                             overviewKeyHandler.forceActiveFocus();
                     }
-                    function onRequestSearchFocus() {
-                        if (!panelWindow.isFocusedOverviewWindow)
-                            return;
-                        searchWidget.focusSearchInput();
-                        searchWidget.focusFirstItem();
-                    }
                     function onOverviewGrabbedChanged() {
                         if (panelWindow.isFocusedOverviewWindow && overviewScope.overviewGrabbed)
                             overviewKeyHandler.forceActiveFocus();
                     }
-                    function onSearchingTextChanged() {
-                        if (overviewScope.overviewNavigationActive())
-                            Qt.callLater(() => overviewScope.requestOverviewFocus());
-                    }
                 }
             }
 
-            Column {
+            StyledFlickable {
                 id: columnLayout
                 visible: GlobalStates.overviewOpen
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     verticalCenter: parent.verticalCenter
                 }
-                spacing: -8
+                clip: true
+                readonly property real availableHeight: panelWindow.height * 0.85
+                implicitWidth: overviewLoader.implicitWidth
+                implicitHeight: visible
+                    ? Math.min(overviewLoader.implicitHeight, Math.max(0, availableHeight))
+                    : 0
+                width: implicitWidth
+                height: implicitHeight
+                contentWidth: width
+                contentHeight: overviewLoader.implicitHeight
 
                 Keys.onPressed: event => {
                     if (event.key === Qt.Key_Escape)
                         GlobalStates.overviewOpen = false;
                 }
 
-                SearchWidget {
-                    id: searchWidget
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    Synchronizer on searchingText {
-                        property alias source: panelWindow.searchingText
-                    }
-                }
-
-                StyledFlickable {
-                    id: overviewScroll
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    clip: true
-                    visible: (overviewScope.searchingText == "")
-                    readonly property real availableHeight: panelWindow.height * 0.85 - searchWidget.implicitHeight
-                    implicitWidth: overviewLoader.implicitWidth
-                    implicitHeight: visible
-                        ? Math.min(overviewLoader.implicitHeight, Math.max(0, availableHeight))
-                        : 0
-                    width: implicitWidth
-                    height: implicitHeight
-                    contentWidth: width
-                    contentHeight: overviewLoader.implicitHeight
-
-                    Loader {
-                        id: overviewLoader
-                        active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
-                        sourceComponent: OverviewWidget {
-                            screen: panelWindow.screen
-                            visible: (overviewScope.searchingText == "")
-                        }
+                Loader {
+                    id: overviewLoader
+                    active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
+                    sourceComponent: OverviewWidget {
+                        screen: panelWindow.screen
+                        visible: GlobalStates.overviewOpen
                     }
                 }
             }
@@ -356,30 +301,8 @@ Scope {
         }
     }
 
-    function toggleClipboard() {
-        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
-            GlobalStates.overviewOpen = false;
-            return;
-        }
-        overviewScope.dontAutoCancelSearch = true;
-        overviewScope.searchingText = Config.options.search.prefix.clipboard;
-        GlobalStates.overviewOpen = true;
-        Qt.callLater(() => overviewScope.requestSearchFocus());
-    }
-
-    function toggleEmojis() {
-        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
-            GlobalStates.overviewOpen = false;
-            return;
-        }
-        overviewScope.dontAutoCancelSearch = true;
-        overviewScope.searchingText = Config.options.search.prefix.emojis;
-        GlobalStates.overviewOpen = true;
-        Qt.callLater(() => overviewScope.requestSearchFocus());
-    }
-
     IpcHandler {
-        target: "search"
+        target: "overview"
 
         function toggle() {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
@@ -396,9 +319,6 @@ Scope {
         function toggleReleaseInterrupt() {
             GlobalStates.superReleaseMightTrigger = false;
         }
-        function clipboardToggle() {
-            overviewScope.toggleClipboard();
-        }
         function overviewNext() {
             overviewScope.openGrabbedMode(1);
         }
@@ -410,14 +330,6 @@ Scope {
         }
     }
 
-    GlobalShortcut {
-        name: "searchToggle"
-        description: "Toggles search on press"
-
-        onPressed: {
-            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
-        }
-    }
     GlobalShortcut {
         name: "overviewWorkspacesClose"
         description: "Closes overview on press"
@@ -448,22 +360,5 @@ Scope {
         name: "overviewCommit"
         description: "Workspace overview: commit on Win release"
         onPressed: overviewScope.commitGrabbedMode()
-    }
-    GlobalShortcut {
-        name: "overviewClipboardToggle"
-        description: "Toggle clipboard query on overview widget"
-
-        onPressed: {
-            overviewScope.toggleClipboard();
-        }
-    }
-
-    GlobalShortcut {
-        name: "overviewEmojiToggle"
-        description: "Toggle emoji query on overview widget"
-
-        onPressed: {
-            overviewScope.toggleEmojis();
-        }
     }
 }

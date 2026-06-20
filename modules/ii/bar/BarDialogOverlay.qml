@@ -7,12 +7,18 @@ import qs.modules.ii.sidebarRight.wifiNetworks
 import qs.modules.ii.sidebarRight.nightLight
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Bluetooth
 import Quickshell.Hyprland
 
 Scope {
     id: root
+
+    function openDialog(type: string) {
+        GlobalStates.barDialogType = type;
+        GlobalStates.barDialogOpen = true;
+    }
 
     Loader {
         id: overlayLoader
@@ -98,6 +104,27 @@ Scope {
                     show: visible
                     onDismiss: overlayWindow.close()
                 }
+            }
+        }
+    }
+
+    IpcHandler {
+        target: "barDialog"
+
+        function clipboard() {
+            root.openDialog("clipboard");
+        }
+    }
+
+    GlobalShortcut {
+        name: "barClipboardToggle"
+        description: "Toggle clipboard history from the bar"
+        onPressed: {
+            if (GlobalStates.barDialogOpen && GlobalStates.barDialogType === "clipboard") {
+                GlobalStates.barDialogOpen = false;
+                GlobalStates.barDialogType = "";
+            } else {
+                root.openDialog("clipboard");
             }
         }
     }
