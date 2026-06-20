@@ -63,8 +63,9 @@ Item {
                     color: Appearance.colors.colOnLayer2
                 }
 
-                StyledToolTip {
+                PopupToolTip {
                     text: Translation.tr("Screenshot tool")
+                    anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                 }
 
                 Loader {
@@ -111,8 +112,9 @@ Item {
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer2
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Color picker")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -136,8 +138,9 @@ Item {
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer2
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Microphone")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -167,8 +170,9 @@ Item {
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer2
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Dark Mode")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -209,8 +213,9 @@ Item {
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer2
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Click to cycle through power profiles")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }

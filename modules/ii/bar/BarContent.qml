@@ -256,8 +256,9 @@ Item { // Bar content region
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer0
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Bluetooth")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -281,8 +282,9 @@ Item { // Bar content region
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer0
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Connect to Wi-Fi")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -306,8 +308,9 @@ Item { // Bar content region
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer0
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Clipboard")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -336,8 +339,9 @@ Item { // Bar content region
                         iconSize: Appearance.font.pixelSize.larger
                         color: Hyprsunset.temperatureActive ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Night Light")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -358,8 +362,9 @@ Item { // Bar content region
                         iconSize: Appearance.font.pixelSize.larger
                         color: Idle.inhibit ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Keep system awake")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
@@ -383,8 +388,9 @@ Item { // Bar content region
                         iconSize: Appearance.font.pixelSize.larger
                         color: Appearance.colors.colOnLayer0
                     }
-                    StyledToolTip {
+                    PopupToolTip {
                         text: Translation.tr("Audio output")
+                        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
                     }
                 }
             }
