@@ -113,18 +113,14 @@ MouseArea { // Notification group area
         }
     }
 
-    StyledRectangularShadow {
-        target: background
-        visible: popup
-    }
     Rectangle { // Background of the notification
         id: background
         anchors.left: parent.left
         width: parent.width
-        color: popup ? Appearance.colors.colBackgroundSurfaceContainer : "#1d1d1d"
+        color: popup ? Appearance.tiling.bg : "#1d1d1d"
         radius: 0
         border.width: 1
-        border.color: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ? "#900000" : "#303030"
+        border.color: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ? Appearance.tiling.borderCritical : Appearance.tiling.border
         anchors.leftMargin: root.xOffset
 
         Behavior on anchors.leftMargin {
@@ -148,7 +144,7 @@ MouseArea { // Notification group area
                 bottom: parent.bottom
             }
             width: 3
-            color: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ? "#900000" : "#4c7899"
+            color: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ? Appearance.tiling.borderCritical : Appearance.tiling.accent
             opacity: root.expanded || root.containsMouse ? 1 : 0.45
         }
 

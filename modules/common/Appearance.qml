@@ -394,4 +394,24 @@ Singleton {
     }
 
     syntaxHighlightingTheme: root.m3colors.darkmode ? "Monokai" : "ayu Light"
+
+    property QtObject tiling: QtObject {
+        property color bg: "#1d1d1d"
+        property color bgTitlebar: "#285577"
+        property color bgHover: "#2a2a2a"
+        property color bgActive: "#333333"
+        property color bgInput: "#222222"
+        property color border: "#333333"
+        property color borderFocus: "#4c7899"
+        property color borderCritical: "#900000"
+        property color text: "#c5c8c6"
+        property color textBright: "#ffffff"
+        property color textDim: "#7d7d7d"
+        property color accent: "#4c7899"
+        property color accentBright: "#81a1c1"
+        property color error: "#bf616a"
+        property color success: "#a3be8c"
+        property int borderWidth: 1
+        property int titlebarHeight: 26
+    }
 }

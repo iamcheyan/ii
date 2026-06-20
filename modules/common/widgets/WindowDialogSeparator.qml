@@ -7,10 +7,10 @@ import qs.modules.common.widgets
 
 Rectangle {
     implicitHeight: 1
-    color: Appearance.colors.colOutline
+    color: Appearance.tiling.border
     Layout.fillWidth: true
-    Layout.leftMargin: -Appearance.rounding.large
-    Layout.rightMargin: -Appearance.rounding.large
-    Layout.topMargin: -8
-    Layout.bottomMargin: -8
+    Layout.leftMargin: -10
+    Layout.rightMargin: -10
+    Layout.topMargin: -4
+    Layout.bottomMargin: -4
 }

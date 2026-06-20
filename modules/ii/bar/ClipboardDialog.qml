@@ -28,8 +28,8 @@ WindowDialog {
         Layout.fillWidth: true
         Layout.topMargin: -15
         Layout.bottomMargin: -16
-        Layout.leftMargin: -Appearance.rounding.large
-        Layout.rightMargin: -Appearance.rounding.large
+        Layout.leftMargin: -10
+        Layout.rightMargin: -10
 
         clip: true
         spacing: 0

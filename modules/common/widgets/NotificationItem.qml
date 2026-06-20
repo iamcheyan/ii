@@ -127,11 +127,11 @@ Item { // Notification item area
 
         color: (expanded && !onlyNotification) ? 
             (notificationObject.urgency == NotificationUrgency.Critical) ? 
-                ColorUtils.mix(Appearance.colors.colSecondaryContainer, Appearance.colors.colLayer2, 0.35) :
-                ("#242424") :
-            ColorUtils.transparentize("#242424")
+                ColorUtils.mix(Appearance.tiling.error, Appearance.tiling.bg, 0.65) :
+                Appearance.tiling.bgActive :
+            ColorUtils.transparentize(Appearance.tiling.bgActive)
         border.width: root.expanded && !root.onlyNotification ? 1 : 0
-        border.color: "#363636"
+        border.color: Appearance.tiling.border
 
         implicitHeight: expanded ? (contentColumn.implicitHeight + padding * 2) : summaryRow.implicitHeight
         Behavior on implicitHeight {
@@ -221,7 +221,7 @@ Item { // Notification item area
                         maskSource: Rectangle {
                             width: actionsFlickable.width
                             height: actionsFlickable.height
-                            radius: Appearance.rounding.small
+                            radius: 0
                         }
                     }
 

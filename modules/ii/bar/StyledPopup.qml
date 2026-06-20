@@ -54,13 +54,9 @@ LazyLoader {
         WlrLayershell.namespace: "quickshell:popup"
         WlrLayershell.layer: WlrLayer.Overlay
 
-        StyledRectangularShadow {
-            target: popupBackground
-        }
-
         Rectangle {
             id: popupBackground
-            readonly property real margin: 10
+            readonly property real margin: 8
             anchors {
                 fill: parent
                 leftMargin: Appearance.sizes.elevationMargin + root.popupBackgroundMargin * (!popupWindow.anchors.left)
@@ -70,12 +66,12 @@ LazyLoader {
             }
             implicitWidth: root.contentItem.implicitWidth + margin * 2
             implicitHeight: root.contentItem.implicitHeight + margin * 2
-            color: Appearance.m3colors.m3surfaceContainer
-            radius: Appearance.rounding.small
+            color: Appearance.tiling.bg
+            radius: 0
             children: [root.contentItem]
 
-            border.width: 1
-            border.color: Appearance.colors.colLayer0Border
+            border.width: Appearance.tiling.borderWidth
+            border.color: Appearance.tiling.borderFocus
         }
     }
 }

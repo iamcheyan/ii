@@ -8,22 +8,24 @@ RowLayout {
     required property string icon
     required property string label
     required property string value
-    spacing: 4
+    spacing: 6
 
     MaterialSymbol {
         text: root.icon
-        color: Appearance.colors.colOnSurfaceVariant
-        iconSize: Appearance.font.pixelSize.large
+        color: Appearance.tiling.accent
+        iconSize: Appearance.font.pixelSize.small
     }
     StyledText {
         text: root.label
-        color: Appearance.colors.colOnSurfaceVariant
+        color: Appearance.tiling.text
+        font.pixelSize: Appearance.font.pixelSize.smaller
     }
     StyledText {
         Layout.fillWidth: true
         horizontalAlignment: Text.AlignRight
         visible: root.value !== ""
-        color: Appearance.colors.colOnSurfaceVariant
+        color: Appearance.tiling.textBright
         text: root.value
+        font.pixelSize: Appearance.font.pixelSize.smaller
     }
 }

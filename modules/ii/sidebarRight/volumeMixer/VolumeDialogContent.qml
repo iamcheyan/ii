@@ -66,8 +66,8 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.topMargin: -22
         Layout.bottomMargin: -16
-        Layout.leftMargin: -Appearance.rounding.large
-        Layout.rightMargin: -Appearance.rounding.large
+        Layout.leftMargin: -10
+        Layout.rightMargin: -10
         topMargin: 12
         bottomMargin: 12
         leftMargin: 20

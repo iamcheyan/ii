@@ -3,24 +3,21 @@ import qs.modules.common.functions
 import qs.modules.common.widgets
 import QtQuick
 
-/**
- * Material 3 dialog button. See https://m3.material.io/components/dialogs/overview
- */
 RippleButton {
     id: root
 
     property string buttonText
-    padding: 14
-    implicitHeight: 36
+    padding: 12
+    implicitHeight: 30
     implicitWidth: buttonTextWidget.implicitWidth + padding * 2
-    buttonRadius: Appearance?.rounding.full ?? 0
+    buttonRadius: 0
 
-    property color colEnabled: Appearance?.colors.colPrimary ?? "#65558F"
-    property color colDisabled: Appearance?.m3colors.m3outline ?? "#8D8C96"
-    colBackground: ColorUtils.transparentize(Appearance.colors.colLayer3)
-    colBackgroundHover: Appearance.colors.colLayer3Hover
-    colRipple: Appearance.colors.colLayer3Active
-    property alias colText: buttonTextWidget.color
+    property color colText: Appearance.tiling.text
+    rippleEnabled: false
+
+    colBackground: ColorUtils.transparentize(Appearance.tiling.bg, 1)
+    colBackgroundHover: Appearance.tiling.bgHover
+    colRipple: Appearance.tiling.bgHover
 
     contentItem: StyledText {
         id: buttonTextWidget
@@ -29,12 +26,11 @@ RippleButton {
         anchors.rightMargin: root.padding
         text: buttonText
         horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: Appearance?.font.pixelSize.small ?? 12
-        color: root.enabled ? root.colEnabled : root.colDisabled
+        font.pixelSize: Appearance.font.pixelSize.small
+        color: root.enabled ? root.colText : Appearance.tiling.textDim
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
     }
-
 }

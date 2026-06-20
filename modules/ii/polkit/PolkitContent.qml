@@ -59,7 +59,7 @@ Item {
         WindowDialogTitle {
             id: titleText
             Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
+            textAlignment: Text.AlignHCenter
             text: Translation.tr("Authentication")
         }
 

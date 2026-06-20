@@ -3,28 +3,37 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 
-Row {
+Rectangle {
     id: root
     required property var icon
     required property var label
-    spacing: 5
+    height: 24
+    implicitWidth: row.implicitWidth + 10 * 2
+    color: Appearance.tiling.bgTitlebar
+    radius: 0
 
-    MaterialSymbol {
-        anchors.verticalCenter: parent.verticalCenter
-        fill: 0
-        font.weight: Font.DemiBold
-        text: root.icon
-        iconSize: Appearance.font.pixelSize.large
-        color: Appearance.colors.colOnSurfaceVariant
-    }
+    Row {
+        id: row
+        anchors.centerIn: parent
+        spacing: 6
 
-    StyledText {
-        anchors.verticalCenter: parent.verticalCenter
-        text: root.label
-        font {
-            weight: Font.DemiBold
-            pixelSize: Appearance.font.pixelSize.normal
+        MaterialSymbol {
+            anchors.verticalCenter: parent.verticalCenter
+            fill: 0
+            font.weight: Font.Bold
+            text: root.icon
+            iconSize: Appearance.font.pixelSize.small
+            color: Appearance.tiling.textBright
         }
-        color: Appearance.colors.colOnSurfaceVariant
+
+        StyledText {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.label
+            font {
+                weight: Font.Bold
+                pixelSize: Appearance.font.pixelSize.small
+            }
+            color: Appearance.tiling.textBright
+        }
     }
 }

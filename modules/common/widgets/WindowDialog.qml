@@ -11,9 +11,9 @@ Rectangle {
     property bool show: false
     default property alias contentData: contentColumn.data
     property real backgroundHeight: dialogBackground.implicitHeight
-    property real backgroundWidth: 350
+    property real backgroundWidth: 360
     property real backgroundAnimationMovementDistance: 60
-    
+
     signal dismiss()
     Keys.onPressed: (event) => {
         if (event.key === Qt.Key_Escape) {
@@ -22,7 +22,7 @@ Rectangle {
         }
     }
 
-    color: root.show ? Appearance.colors.colScrim : ColorUtils.transparentize(Appearance.colors.colScrim)
+    color: root.show ? Appearance.tiling.border : Appearance.tiling.bg
     Behavior on color {
         animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
     }
@@ -33,9 +33,9 @@ Rectangle {
         dialogBackground.implicitHeight = show ? backgroundHeight : 0
     }
 
-    radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
+    radius: 0
 
-    MouseArea { // Clicking outside the dialog should dismiss
+    MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.AllButtons
         hoverEnabled: true
@@ -45,13 +45,15 @@ Rectangle {
     Rectangle {
         id: dialogBackground
         anchors.horizontalCenter: parent.horizontalCenter
-        radius: Appearance.rounding.large
-        color: Appearance.m3colors.m3surfaceContainerHigh // Use opaque version of layer3
-        
+        radius: 0
+        color: Appearance.tiling.bg
+        border.width: Appearance.tiling.borderWidth
+        border.color: Appearance.tiling.borderFocus
+
         property real targetY: root.height / 2 - root.backgroundHeight / 2
         y: root.show ? targetY : (targetY - root.backgroundAnimationMovementDistance)
         implicitWidth: root.backgroundWidth
-        implicitHeight: contentColumn.implicitHeight + dialogBackground.radius * 2
+        implicitHeight: contentColumn.implicitHeight + contentColumn.anchors.margins * 2
         Behavior on implicitHeight {
             NumberAnimation {
                 id: dialogBackgroundHeightAnimation
@@ -68,7 +70,7 @@ Rectangle {
             }
         }
 
-        MouseArea { // So clicking inside the dialog won't dismiss
+        MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.AllButtons
             hoverEnabled: true
@@ -77,15 +79,16 @@ Rectangle {
         ColumnLayout {
             id: contentColumn
             anchors {
-                fill: parent
-                margins: dialogBackground.radius
+                left: parent.left
+                right: parent.right
+                top: parent.top
+                margins: 0
             }
-            spacing: 16
+            spacing: 6
             opacity: root.show ? 1 : 0
             Behavior on opacity {
                 animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
             }
-
         }
     }
 }

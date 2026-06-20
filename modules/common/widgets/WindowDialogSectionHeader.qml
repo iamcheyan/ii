@@ -6,9 +6,9 @@ import qs.modules.common.widgets
 
 StyledText {
     text: "Section"
+    color: Appearance.tiling.accentBright
     font {
-        family: Appearance.font.family.title
-        pixelSize: Appearance.font.pixelSize.large
-        variableAxes: Appearance.font.variableAxes.title
+        pixelSize: Appearance.font.pixelSize.small
+        weight: Font.Bold
     }
 }
