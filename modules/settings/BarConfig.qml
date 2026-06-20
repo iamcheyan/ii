@@ -30,31 +30,21 @@ ContentPage {
                 Layout.fillWidth: true
 
                 ConfigSelectionArray {
-                    currentValue: (Config.options.bar.bottom ? 1 : 0) | (Config.options.bar.vertical ? 2 : 0)
+                    currentValue: Config.options.bar.bottom ? 1 : 0
                     onSelected: newValue => {
-                        Config.options.bar.bottom = (newValue & 1) !== 0;
-                        Config.options.bar.vertical = (newValue & 2) !== 0;
+                        Config.options.bar.bottom = newValue === 1;
+                        Config.options.bar.vertical = false;
                     }
                     options: [
                         {
                             displayName: Translation.tr("Top"),
                             icon: "arrow_upward",
-                            value: 0 // bottom: false, vertical: false
-                        },
-                        {
-                            displayName: Translation.tr("Left"),
-                            icon: "arrow_back",
-                            value: 2 // bottom: false, vertical: true
+                            value: 0
                         },
                         {
                             displayName: Translation.tr("Bottom"),
                             icon: "arrow_downward",
-                            value: 1 // bottom: true, vertical: false
-                        },
-                        {
-                            displayName: Translation.tr("Right"),
-                            icon: "arrow_forward",
-                            value: 3 // bottom: true, vertical: true
+                            value: 1
                         }
                     ]
                 }
@@ -189,14 +179,6 @@ ContentPage {
         }
         ConfigRow {
             uniform: true
-            ConfigSwitch {
-                buttonIcon: "keyboard"
-                text: Translation.tr("Keyboard toggle")
-                checked: Config.options.bar.utilButtons.showKeyboardToggle
-                onCheckedChanged: {
-                    Config.options.bar.utilButtons.showKeyboardToggle = checked;
-                }
-            }
             ConfigSwitch {
                 buttonIcon: "mic"
                 text: Translation.tr("Mic toggle")

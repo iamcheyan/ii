@@ -34,7 +34,6 @@ ShellRoot {
         Hyprsunset.load()
         FirstRunExperience.load()
         ConflictKiller.load()
-        Wallpapers.load()
         Updates.load()
 
         if (Config.options?.startup?.deferBackgroundTasks ?? true)
@@ -49,4 +48,3 @@ ShellRoot {
         component: IllogicalImpulseFamily {}
     }
 }
-

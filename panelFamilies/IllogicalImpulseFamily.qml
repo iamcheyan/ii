@@ -10,18 +10,14 @@ import qs.modules.ii.lock
 import qs.modules.ii.mediaControls
 import qs.modules.ii.notificationPopup
 import qs.modules.ii.onScreenDisplay
-import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.overview
 import qs.modules.ii.polkit
 import qs.modules.ii.regionSelector
 import qs.modules.ii.schedulePopup
 import qs.modules.ii.screenCorners
-import qs.modules.ii.screenTranslator
 import qs.modules.ii.sessionScreen
 import qs.modules.ii.sidebarRight
 import qs.modules.ii.overlay
-import qs.modules.ii.verticalBar
-import qs.modules.ii.wallpaperSelector
 
 Scope {
     id: family
@@ -45,8 +41,7 @@ Scope {
     }
 
     // Tier 0 — 立即可见的核心 UI
-    PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
-    PanelLoader { extraCondition: Config.options.bar.vertical; component: VerticalBar {} }
+    PanelLoader { component: Bar {} }
     PanelLoader { component: Background {} }
     PanelLoader { component: ScreenCorners {} }
     PanelLoader { component: OnScreenDisplay {} }
@@ -95,12 +90,6 @@ Scope {
         loadTier: 1
         tier1Ready: family.tier1Ready
         tier2Ready: family.tier2Ready
-        component: OnScreenKeyboard {}
-    }
-    PanelLoader {
-        loadTier: 1
-        tier1Ready: family.tier1Ready
-        tier2Ready: family.tier2Ready
         component: Polkit {}
     }
     PanelLoader {
@@ -122,17 +111,5 @@ Scope {
         tier1Ready: family.tier1Ready
         tier2Ready: family.tier2Ready
         component: Overlay {}
-    }
-    PanelLoader {
-        loadTier: 2
-        tier1Ready: family.tier1Ready
-        tier2Ready: family.tier2Ready
-        component: ScreenTranslator {}
-    }
-    PanelLoader {
-        loadTier: 2
-        tier1Ready: family.tier1Ready
-        tier2Ready: family.tier2Ready
-        component: WallpaperSelector {}
     }
 }

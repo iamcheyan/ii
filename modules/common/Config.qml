@@ -223,7 +223,6 @@ Singleton {
                     property bool showScreenSnip: true
                     property bool showColorPicker: false
                     property bool showMicToggle: false
-                    property bool showKeyboardToggle: true
                     property bool showDarkModeToggle: true
                     property bool showPerformanceProfileToggle: false
                     property bool showScreenRecord: false
@@ -365,11 +364,6 @@ Singleton {
 
             property JsonObject osd: JsonObject {
                 property int timeout: 1000
-            }
-
-            property JsonObject osk: JsonObject {
-                property string layout: "qwerty_full"
-                property bool pinnedOnStartup: false
             }
 
             property JsonObject overlay: JsonObject {

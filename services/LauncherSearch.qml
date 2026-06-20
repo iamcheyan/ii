@@ -107,12 +107,6 @@ Singleton {
             }
         },
         {
-            action: "wallpaper",
-            execute: () => {
-                Hyprland.dispatch(`hl.dsp.global("quickshell:wallpaperSelectorToggle")`)
-            }
-        },
-        {
             action: "wipeclipboard",
             execute: () => {
                 Cliphist.wipe();
