@@ -13,9 +13,9 @@ Scope {
     id: screenCorners
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
     property var actionForCorner: ({
-        [RoundCorner.CornerEnum.TopLeft]: () => {},
+        [RoundCorner.CornerEnum.TopLeft]: () => GlobalStates.appLauncherOpen = !GlobalStates.appLauncherOpen,
         [RoundCorner.CornerEnum.BottomLeft]: () => {},
-        [RoundCorner.CornerEnum.TopRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen,
+        [RoundCorner.CornerEnum.TopRight]: () => GlobalStates.overviewOpen = !GlobalStates.overviewOpen,
         [RoundCorner.CornerEnum.BottomRight]: () => GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
     })
 
