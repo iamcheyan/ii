@@ -31,6 +31,12 @@ Item {
                 if (id === root.highlightedWorkspaceId || HyprlandData.workspaceHasVisibleWindows(id))
                     entries.push({ id, isTrailingEmpty: false });
             }
+            let maxId = 0;
+            for (const e of entries) maxId = Math.max(maxId, e.id);
+            if (maxId === 0) maxId = root.effectiveActiveWorkspaceId;
+            const trailingId = maxId + 1;
+            if (trailingId <= 100)
+                entries.push({ id: trailingId, isTrailingEmpty: true });
             return entries;
         }
         return HyprlandData.overviewWorkspaceEntriesOnMonitor(root.monitor?.name);
