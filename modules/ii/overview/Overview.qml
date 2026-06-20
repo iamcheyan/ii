@@ -428,6 +428,7 @@ Scope {
                 sourceComponent: OverviewWidget {
                     screen: panelWindow.screen
                     visible: GlobalStates.overviewAltTabMode || (panelWindow.searchingText == "")
+                    altTabCycler: (dir) => overviewScope.cycleAltTabWorkspace(dir)
                 }
             }
 

@@ -14,6 +14,7 @@ import Quickshell.Hyprland
 Item {
     id: root
     required property var screen
+    property var altTabCycler: null
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property var toplevels: ToplevelManager.toplevels
     // Clamp to avoid lock-screen temp workspace (2147483647 - N) leaking into UI
@@ -146,9 +147,9 @@ Item {
             onWheel: wheel => {
                 if (GlobalStates.overviewAltTabMode) {
                     if (wheel.angleDelta.y > 0)
-                        overviewScope.cycleAltTabWorkspace(-1);
+                        root.altTabCycler && root.altTabCycler(-1);
                     else if (wheel.angleDelta.y < 0)
-                        overviewScope.cycleAltTabWorkspace(1);
+                        root.altTabCycler && root.altTabCycler(1);
                 } else {
                     if (wheel.angleDelta.y > 0)
                         root.cycleOverviewWorkspace(-1);
@@ -219,9 +220,9 @@ Item {
                         onWheel: wheel => {
                             if (GlobalStates.overviewAltTabMode) {
                                 if (wheel.angleDelta.y > 0)
-                                    overviewScope.cycleAltTabWorkspace(-1);
+                                    root.altTabCycler && root.altTabCycler(-1);
                                 else if (wheel.angleDelta.y < 0)
-                                    overviewScope.cycleAltTabWorkspace(1);
+                                    root.altTabCycler && root.altTabCycler(1);
                                 wheel.accepted = true;
                             } else if (root.overviewNavigationActive) {
                                 if (wheel.angleDelta.y > 0)
@@ -360,9 +361,9 @@ Item {
                         onWheel: wheel => {
                             if (GlobalStates.overviewAltTabMode) {
                                 if (wheel.angleDelta.y > 0)
-                                    overviewScope.cycleAltTabWorkspace(-1);
+                                    root.altTabCycler && root.altTabCycler(-1);
                                 else if (wheel.angleDelta.y < 0)
-                                    overviewScope.cycleAltTabWorkspace(1);
+                                    root.altTabCycler && root.altTabCycler(1);
                                 wheel.accepted = true;
                             } else if (root.overviewNavigationActive) {
                                 if (wheel.angleDelta.y > 0)
