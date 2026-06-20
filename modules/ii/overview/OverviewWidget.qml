@@ -194,7 +194,7 @@ Item {
 
                     StyledText {
                         anchors.centerIn: parent
-                        text: workspace.workspaceValue
+                        text: workspace.isTrailingEmpty ? "+" : ""
                         font {
                             pixelSize: root.workspaceNumberSize * root.scale
                             weight: Font.DemiBold
