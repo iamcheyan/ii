@@ -49,7 +49,7 @@ Item { // Window
     property real iconToWindowRatio: centerIcons ? 0.35 : 0.15
     property real xwaylandIndicatorToIconRatio: 0.35
     property real iconToWindowRatioCompact: 0.6
-    property string iconPath: Quickshell.iconPath(AppSearch.guessIcon(windowData?.class), "image-missing")
+    property string iconPath: AppSearch.iconSource(AppSearch.guessIcon(windowData?.class))
     property bool compactMode: Appearance.font.pixelSize.smaller * 4 > targetWindowHeight || Appearance.font.pixelSize.smaller * 4 > targetWindowWidth
 
     property bool indicateXWayland: windowData?.xwayland ?? false
@@ -138,6 +138,28 @@ Item { // Window
             }
             Behavior on height {
                 animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
+            }
+        }
+
+        Rectangle {
+            visible: root.iconPath === "" || windowIcon.status === Image.Error
+            anchors {
+                top: root.centerIcons ? undefined : parent.top
+                left: root.centerIcons ? undefined : parent.left
+                centerIn: root.centerIcons ? parent : undefined
+                margins: Math.min(root.targetWindowWidth, root.targetWindowHeight) * root.iconGapRatio
+            }
+            width: windowIcon.width
+            height: windowIcon.height
+            radius: Math.max(4, width * 0.18)
+            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.25)
+
+            StyledText {
+                anchors.centerIn: parent
+                text: (windowData?.class || windowData?.title || "?").charAt(0).toUpperCase()
+                font.pixelSize: Math.max(10, parent.height * 0.45)
+                font.weight: Font.Bold
+                color: Appearance.colors.colOnPrimary
             }
         }
     }

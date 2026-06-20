@@ -1,5 +1,6 @@
 import qs.modules.common
 import qs.modules.common.functions
+import qs.services
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import Quickshell
@@ -54,7 +55,7 @@ MaterialShape { // App icon
             id: appIconImage
             implicitSize: root.appIconSize
             asynchronous: true
-            source: Quickshell.iconPath(root.appIcon, "image-missing")
+            source: AppSearch.iconSource(root.appIcon)
         }
     }
     Loader {
@@ -91,7 +92,7 @@ MaterialShape { // App icon
                 sourceComponent: IconImage {
                     implicitSize: root.smallAppIconSize
                     asynchronous: true
-                    source: Quickshell.iconPath(root.appIcon, "image-missing")
+                    source: AppSearch.iconSource(root.appIcon)
                 }
             }
         }

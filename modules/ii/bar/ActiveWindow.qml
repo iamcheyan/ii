@@ -45,13 +45,13 @@ Item {
                 id: windowIcon
                 anchors.fill: parent
                 visible: root.windowIconClass.length > 0
-                source: Quickshell.iconPath(AppSearch.guessIcon(root.windowIconClass), "image-missing")
+                source: AppSearch.iconSource(AppSearch.guessIcon(root.windowIconClass))
                 smooth: true
             }
 
             Rectangle {
                 anchors.fill: parent
-                visible: !windowIcon.visible || windowIcon.status !== Image.Ready
+                visible: !windowIcon.visible || windowIcon.source === "" || windowIcon.status === Image.Error
                 radius: 3
                 color: "#1e3a5f"
 

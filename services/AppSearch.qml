@@ -83,6 +83,25 @@ Singleton {
             && !iconName.includes("image-missing");
     }
 
+    function iconSource(iconName, fallback = "application-x-executable") {
+        if (iconName && iconName.startsWith("file://")) return iconName;
+        if (iconName && iconName.startsWith("/")) return "file://" + iconName;
+
+        const resolved = Quickshell.iconPath(iconName || "", true);
+        if (resolved && resolved.length > 0 && !resolved.includes("image-missing")) {
+            if (resolved.startsWith("/")) return "file://" + resolved;
+            return resolved;
+        }
+
+        const fallbackResolved = Quickshell.iconPath(fallback, true);
+        if (fallbackResolved && fallbackResolved.length > 0 && !fallbackResolved.includes("image-missing")) {
+            if (fallbackResolved.startsWith("/")) return "file://" + fallbackResolved;
+            return fallbackResolved;
+        }
+
+        return "";
+    }
+
     function getReverseDomainNameAppName(str) {
         return str.split('.').slice(-1)[0]
     }
@@ -96,7 +115,7 @@ Singleton {
     }
 
     function guessIcon(str) {
-        if (!str || str.length == 0) return "image-missing";
+        if (!str || str.length == 0) return "application-x-executable";
 
         // Quickshell's desktop entry lookup
         const entry = DesktopEntries.byId(str);
