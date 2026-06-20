@@ -15,7 +15,7 @@ Item { // Notification item area
     property bool expanded: false
     property bool onlyNotification: false
     property real fontSize: Appearance.font.pixelSize.small
-    property real padding: onlyNotification ? 0 : 8
+    property real padding: onlyNotification ? 0 : 7
     property real summaryElideRatio: 0.85
 
     property real dragConfirmThreshold: 70 // Drag further to discard notification
@@ -113,7 +113,7 @@ Item { // Notification item area
         id: background
         width: parent.width
         anchors.left: parent.left
-        radius: Appearance.rounding.small
+        radius: 0
         anchors.leftMargin: root.xOffset
 
         Behavior on anchors.leftMargin {
@@ -128,8 +128,10 @@ Item { // Notification item area
         color: (expanded && !onlyNotification) ? 
             (notificationObject.urgency == NotificationUrgency.Critical) ? 
                 ColorUtils.mix(Appearance.colors.colSecondaryContainer, Appearance.colors.colLayer2, 0.35) :
-                (Appearance.colors.colLayer3) :
-            ColorUtils.transparentize(Appearance.colors.colLayer3)
+                ("#242424") :
+            ColorUtils.transparentize("#242424")
+        border.width: root.expanded && !root.onlyNotification ? 1 : 0
+        border.color: "#363636"
 
         implicitHeight: expanded ? (contentColumn.implicitHeight + padding * 2) : summaryRow.implicitHeight
         Behavior on implicitHeight {

@@ -217,7 +217,8 @@ Singleton {
                     property int swapWarningThreshold: 85
                     property int cpuWarningThreshold: 90
                 }
-                property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
+                property list<string> screenList: [] // Non-empty: show bar only on these monitors (hyprctl monitors)
+                property bool showOnFocusedMonitorOnly: false // When screenList is empty, show bars on all monitors
                 property JsonObject utilButtons: JsonObject {
                     property bool showScreenSnip: true
                     property bool showColorPicker: false
@@ -293,10 +294,9 @@ Singleton {
 
             property JsonObject dock: JsonObject {
                 property bool enable: false
-                property bool monochromeIcons: true
-                property real height: 60
-                property real hoverRegionHeight: 2
-                property bool pinnedOnStartup: false
+                property string position: "left" // fixed left-side dock
+                property real height: 84
+                property real hoverRegionHeight: 4
                 property bool hoverToReveal: true // When false, only reveals on empty workspace
                 property list<string> pinnedApps: [ // IDs of pinned entries
                     "org.kde.dolphin", "kitty",]

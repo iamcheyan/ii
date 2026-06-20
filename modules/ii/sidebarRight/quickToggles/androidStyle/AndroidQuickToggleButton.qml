@@ -38,6 +38,9 @@ GroupButton {
     // Sizing shenanigans
     baseWidth: root.baseCellWidth * cellSize + cellSpacing * (cellSize - 1)
     baseHeight: root.baseCellHeight
+    clickedWidth: baseWidth
+    clickedHeight: baseHeight
+    bounce: false
     enableImplicitWidthAnimation: !editMode && root.mouseArea.containsMouse
     enableImplicitHeightAnimation: !editMode && root.mouseArea.containsMouse
     Behavior on baseWidth {
@@ -59,14 +62,18 @@ GroupButton {
     horizontalPadding: padding
     verticalPadding: padding
 
-    colBackground: Appearance.colors.colLayer2
-    colBackgroundToggled: (altAction && expandedSize) ? Appearance.colors.colLayer2 : Appearance.colors.colPrimary
-    colBackgroundToggledHover: (altAction && expandedSize) ? Appearance.colors.colLayer2Hover : Appearance.colors.colPrimaryHover
-    colBackgroundToggledActive: (altAction && expandedSize) ? Appearance.colors.colLayer2Active : Appearance.colors.colPrimaryActive
+    colBackground: "#1b1b1b"
+    colBackgroundHover: "#242424"
+    colBackgroundActive: "#303030"
+    colBackgroundToggled: (altAction && expandedSize) ? "#1b1b1b" : "#285577"
+    colBackgroundToggledHover: (altAction && expandedSize) ? "#242424" : "#34658b"
+    colBackgroundToggledActive: (altAction && expandedSize) ? "#303030" : "#1f425d"
     buttonRadius: 0
-    buttonRadiusPressed: Appearance.rounding.normal
+    buttonRadiusPressed: 0
+    borderWidth: 1
+    borderColor: root.toggled ? "#4c7899" : "#303030"
     property color colText: (toggled && !(altAction && expandedSize) && enabled) ? Appearance.colors.colOnPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer2, enabled ? 0 : 0.7)
-    property color colIcon: expandedSize ? ((root.toggled) ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer3) : colText
+    property color colIcon: expandedSize ? ((root.toggled) ? "#ffffff" : Appearance.colors.colOnLayer3) : colText
 
     onClicked: {
         if (root.expandedSize && root.altAction) root.altAction();
@@ -102,12 +109,14 @@ GroupButton {
                 id: iconBackground
                 anchors.fill: parent
                 implicitWidth: height
-                radius: root.radius - root.verticalPadding
+                radius: 0
                 color: {
-                    const baseColor = root.toggled ? Appearance.colors.colPrimary : Appearance.colors.colLayer3
+                    const baseColor = root.toggled ? "#285577" : "#242424"
                     const transparentizeAmount = (root.altAction && root.expandedSize) ? 0 : 1
                     return ColorUtils.transparentize(baseColor, transparentizeAmount)
                 }
+                border.width: (root.altAction && root.expandedSize) ? 1 : 0
+                border.color: root.toggled ? "#4c7899" : "#363636"
 
                 Behavior on radius {
                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)

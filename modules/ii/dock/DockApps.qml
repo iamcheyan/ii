@@ -13,6 +13,7 @@ import qs.modules.common.functions
 
 Item {
     id: root
+    property bool vertical: false
     property real maxWindowPreviewHeight: 200
     property real maxWindowPreviewWidth: 300
     property real windowControlsHeight: 30
@@ -22,41 +23,52 @@ Item {
     property bool buttonHovered: false
     property bool requestDockShow: previewPopup.show
 
-    Layout.fillHeight: true
-    Layout.topMargin: Appearance.sizes.hyprlandGapsOut
-    implicitWidth: listView.implicitWidth
+    Layout.fillHeight: !vertical
+    Layout.fillWidth: false
+    Layout.alignment: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+    Layout.topMargin: vertical ? 0 : Appearance.sizes.hyprlandGapsOut
+    readonly property Item activeLayout: vertical ? appColumn : appRow
 
-    function popupCenterXForButton(button) {
-        if (!button || !root.QsWindow)
-            return 0;
-        return root.QsWindow.mapFromItem(button, button.width / 2, 0).x;
+    implicitWidth: activeLayout.implicitWidth
+    implicitHeight: activeLayout.implicitHeight
+
+    RowLayout {
+        id: appRow
+        anchors.centerIn: parent
+        spacing: 2
+        visible: !root.vertical
+
+        Repeater {
+            model: ScriptModel {
+                objectProp: "appId"
+                values: TaskbarApps.apps
+            }
+            delegate: DockAppButton {
+                required property var modelData
+                appToplevel: modelData
+                appListRoot: root
+                vertical: false
+            }
+        }
     }
 
-    StyledListView {
-        id: listView
+    ColumnLayout {
+        id: appColumn
+        anchors.centerIn: parent
         spacing: 2
-        orientation: ListView.Horizontal
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-        }
-        implicitWidth: contentWidth
+        visible: root.vertical
 
-        Behavior on implicitWidth {
-            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-        }
-
-        model: ScriptModel {
-            objectProp: "appId"
-            values: TaskbarApps.apps
-        }
-        delegate: DockAppButton {
-            required property var modelData
-            appToplevel: modelData
-            appListRoot: root
-
-            topInset: Appearance.sizes.hyprlandGapsOut + root.buttonPadding
-            bottomInset: Appearance.sizes.hyprlandGapsOut + root.buttonPadding
+        Repeater {
+            model: ScriptModel {
+                objectProp: "appId"
+                values: TaskbarApps.apps
+            }
+            delegate: DockAppButton {
+                required property var modelData
+                appToplevel: modelData
+                appListRoot: root
+                vertical: true
+            }
         }
     }
 
@@ -67,17 +79,10 @@ Item {
         property bool shouldShow: (popupMouseArea.containsMouse || root.buttonHovered) && appTopLevel && appTopLevel.toplevels && appTopLevel.toplevels.length > 0
 
         property bool show: false
-        property real cachedCenterX: 0
 
         Connections {
             target: root
-            function onLastHoveredButtonChanged() {
-                if (root.lastHoveredButton && root.QsWindow)
-                    previewPopup.cachedCenterX = root.popupCenterXForButton(root.lastHoveredButton);
-            }
             function onButtonHoveredChanged() {
-                if (root.buttonHovered && root.lastHoveredButton && root.QsWindow)
-                    previewPopup.cachedCenterX = root.popupCenterXForButton(root.lastHoveredButton);
                 updateTimer.restart();
             }
         }
@@ -96,23 +101,21 @@ Item {
 
         anchor {
             window: root.QsWindow.window
+            item: root.lastHoveredButton
             adjustment: PopupAdjustment.None
-            gravity: Edges.Top | Edges.Right
-            edges: Edges.Top | Edges.Left
+            gravity: root.vertical ? Edges.Right : Edges.Top
+            edges: root.vertical ? Edges.Right : Edges.Top
         }
 
         visible: popupBackground.opacity > 0
         color: "transparent"
-        implicitWidth: root.QsWindow.window?.width ?? 1
-        implicitHeight: popupMouseArea.implicitHeight + root.windowControlsHeight + Appearance.sizes.elevationMargin * 2
+        implicitWidth: popupBackground.implicitWidth + Appearance.sizes.elevationMargin * 2
+        implicitHeight: popupBackground.implicitHeight + Appearance.sizes.elevationMargin * 2
 
         MouseArea {
             id: popupMouseArea
-            anchors.bottom: parent.bottom
-            implicitWidth: popupBackground.implicitWidth + Appearance.sizes.elevationMargin * 2
-            implicitHeight: root.maxWindowPreviewHeight + root.windowControlsHeight + Appearance.sizes.elevationMargin * 2
+            anchors.fill: parent
             hoverEnabled: true
-            x: previewPopup.cachedCenterX - width / 2
 
             StyledRectangularShadow {
                 target: popupBackground
@@ -134,9 +137,13 @@ Item {
                 clip: true
                 color: Appearance.m3colors.m3surfaceContainer
                 radius: Appearance.rounding.normal
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: Appearance.sizes.elevationMargin
-                anchors.horizontalCenter: parent.horizontalCenter
+                anchors {
+                    left: root.vertical ? parent.left : undefined
+                    bottom: root.vertical ? undefined : parent.bottom
+                    verticalCenter: root.vertical ? parent.verticalCenter : undefined
+                    horizontalCenter: root.vertical ? undefined : parent.horizontalCenter
+                    margins: Appearance.sizes.elevationMargin
+                }
                 implicitHeight: previewRowLayout.implicitHeight + padding * 2
                 implicitWidth: previewRowLayout.implicitWidth + padding * 2
                 Behavior on implicitWidth {

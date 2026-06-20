@@ -18,7 +18,7 @@ MouseArea { // Notification group area
     property bool multipleNotifications: notificationCount > 1
     property bool expanded: false
     property bool popup: false
-    property real padding: 10
+    property real padding: 8
     implicitHeight: background.implicitHeight
 
     property real dragConfirmThreshold: 70 // Drag further to discard notification
@@ -121,8 +121,10 @@ MouseArea { // Notification group area
         id: background
         anchors.left: parent.left
         width: parent.width
-        color: popup ? Appearance.colors.colBackgroundSurfaceContainer : Appearance.colors.colLayer2
-        radius: Appearance.rounding.normal
+        color: popup ? Appearance.colors.colBackgroundSurfaceContainer : "#1d1d1d"
+        radius: 0
+        border.width: 1
+        border.color: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ? "#900000" : "#303030"
         anchors.leftMargin: root.xOffset
 
         Behavior on anchors.leftMargin {
@@ -139,6 +141,17 @@ MouseArea { // Notification group area
             row.implicitHeight + padding * 2 :
             Math.min(80, row.implicitHeight + padding * 2)
 
+        Rectangle {
+            anchors {
+                left: parent.left
+                top: parent.top
+                bottom: parent.bottom
+            }
+            width: 3
+            color: root.notifications.some(n => n.urgency === NotificationUrgency.Critical.toString()) ? "#900000" : "#4c7899"
+            opacity: root.expanded || root.containsMouse ? 1 : 0.45
+        }
+
         Behavior on implicitHeight {
             id: implicitHeightAnim
             animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
@@ -150,6 +163,7 @@ MouseArea { // Notification group area
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: root.padding
+            anchors.leftMargin: root.padding + 5
             spacing: 10
 
             NotificationAppIcon { // Icons

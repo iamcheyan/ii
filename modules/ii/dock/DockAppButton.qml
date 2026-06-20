@@ -1,7 +1,6 @@
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -12,15 +11,16 @@ DockButton {
     property var appToplevel
     property var appListRoot
     property int lastFocused: -1
-    property real iconSize: 35
-    property real countDotWidth: 10
+    property real iconSize: 44
+    property real countDotWidth: 12
     property real countDotHeight: 4
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined
 
     readonly property bool isSeparator: appToplevel.appId === "SEPARATOR"
     property var desktopEntry: DesktopEntries.heuristicLookup(appToplevel.appId)
     enabled: !isSeparator
-    implicitWidth: isSeparator ? 1 : implicitHeight - topInset - bottomInset
+    implicitWidth: isSeparator ? 1 : squareSide
+    implicitHeight: isSeparator ? 1 : (vertical ? squareSide : background.implicitHeight)
 
     Connections {
         target: DesktopEntries
@@ -34,8 +34,8 @@ DockButton {
         active: isSeparator
         anchors {
             fill: parent
-            topMargin: dockVisualBackground.margin + dockRow.padding + Appearance.rounding.normal
-            bottomMargin: dockVisualBackground.margin + dockRow.padding + Appearance.rounding.normal
+            topMargin: Appearance.sizes.hyprlandGapsOut + Appearance.rounding.normal
+            bottomMargin: Appearance.sizes.hyprlandGapsOut + Appearance.rounding.normal
         }
         sourceComponent: DockSeparator {}
     }
@@ -74,52 +74,27 @@ DockButton {
         root.desktopEntry?.execute();
     }
 
-    altAction: () => {
-        TaskbarApps.togglePin(appToplevel.appId);
-    }
-
     contentItem: Loader {
         active: !isSeparator
         sourceComponent: Item {
-            anchors.centerIn: parent
+            anchors.fill: parent
 
-            Loader {
-                id: iconImageLoader
+            IconImage {
+                id: iconImage
                 anchors {
-                    left: parent.left
-                    right: parent.right
+                    horizontalCenter: parent.horizontalCenter
                     verticalCenter: parent.verticalCenter
+                    verticalCenterOffset: appToplevel.toplevels.length > 0 ? -3 : 0
                 }
-                active: !root.isSeparator
-                sourceComponent: IconImage {
-                    source: Quickshell.iconPath(AppSearch.guessIcon(appToplevel.appId), "image-missing")
-                    implicitSize: root.iconSize
-                }
-            }
-
-            Loader {
-                active: Config.options.dock.monochromeIcons
-                anchors.fill: iconImageLoader
-                sourceComponent: Item {
-                    Desaturate {
-                        id: desaturatedIcon
-                        visible: false // There's already color overlay
-                        anchors.fill: parent
-                        source: iconImageLoader
-                        desaturation: 0.8
-                    }
-                    ColorOverlay {
-                        anchors.fill: desaturatedIcon
-                        source: desaturatedIcon
-                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
-                    }
-                }
+                visible: !root.isSeparator
+                source: Quickshell.iconPath(AppSearch.guessIcon(appToplevel.appId), "image-missing")
+                implicitSize: root.iconSize
             }
 
             RowLayout {
                 spacing: 3
                 anchors {
-                    top: iconImageLoader.bottom
+                    top: iconImage.bottom
                     topMargin: 2
                     horizontalCenter: parent.horizontalCenter
                 }

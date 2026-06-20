@@ -29,6 +29,8 @@ Button {
     property color colBackgroundToggledHover: Appearance?.colors.colPrimaryHover ?? "#77699C"
     property color colRipple: Appearance?.colors.colLayer1Active ?? "#D6CEE2"
     property color colRippleToggled: Appearance?.colors.colPrimaryActive ?? "#D6CEE2"
+    property int borderWidth: 0
+    property color borderColor: Appearance?.colors.colOutlineVariant ?? "#49464a"
 
     opacity: root.enabled ? 1 : 0.4
     property color buttonColor: ColorUtils.transparentize(root.toggled ? 
@@ -137,6 +139,8 @@ Button {
         implicitHeight: 30
 
         color: root.buttonColor
+        border.width: root.borderWidth
+        border.color: root.borderColor
         Behavior on color {
             animation: Appearance?.animation.elementMoveFast.colorAnimation.createObject(this)
         }

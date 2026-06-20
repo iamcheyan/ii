@@ -8,15 +8,21 @@ GroupButton {
     property string buttonIcon: ""
     property string buttonText: ""
 
-    baseHeight: 36
-    baseWidth: content.implicitWidth + 46
-    clickedWidth: baseWidth + 6
+    baseHeight: 34
+    baseWidth: content.implicitWidth + 42
+    clickedWidth: baseWidth
+    bounce: false
 
-    buttonRadius: baseHeight / 2
-    buttonRadiusPressed: Appearance.rounding.small
-    colBackground: Appearance.colors.colLayer2
-    colBackgroundHover: Appearance.colors.colLayer2Hover
-    colBackgroundActive: Appearance.colors.colLayer2Active
+    buttonRadius: 0
+    buttonRadiusPressed: 0
+    colBackground: "#1d1d1d"
+    colBackgroundHover: "#252525"
+    colBackgroundActive: "#303030"
+    colBackgroundToggled: "#285577"
+    colBackgroundToggledHover: "#34658b"
+    colBackgroundToggledActive: "#1f425d"
+    borderWidth: 1
+    borderColor: toggled ? "#4c7899" : "#303030"
     property color colText: toggled ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer1
 
     contentItem: Item {

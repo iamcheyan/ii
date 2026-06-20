@@ -15,15 +15,15 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: statusRow.top
-        anchors.bottomMargin: 5
+        anchors.bottomMargin: 6
 
         clip: true
-        layer.enabled: true
+        layer.enabled: false
         layer.effect: OpacityMask {
             maskSource: Rectangle {
                 width: listview.width
                 height: listview.height
-                radius: Appearance.rounding.normal
+                radius: 0
             }
         }
 
@@ -46,6 +46,7 @@ Item {
             right: parent.right
             bottom: parent.bottom
         }
+        spacing: 6
 
         NotificationStatusButton {
             Layout.fillWidth: false

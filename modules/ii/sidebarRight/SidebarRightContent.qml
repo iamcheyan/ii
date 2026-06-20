@@ -20,7 +20,7 @@ import qs.modules.ii.sidebarRight.wifiNetworks
 Item {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
-    property int sidebarPadding: 10
+    property int sidebarPadding: 8
     property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
@@ -46,6 +46,7 @@ Item {
 
     StyledRectangularShadow {
         target: sidebarRightBackground
+        visible: false
     }
     Rectangle {
         id: sidebarRightBackground
@@ -53,10 +54,10 @@ Item {
         anchors.fill: parent
         implicitHeight: parent.height - Appearance.sizes.hyprlandGapsOut * 2
         implicitWidth: sidebarWidth - Appearance.sizes.hyprlandGapsOut * 2
-        color: Appearance.colors.colLayer0
+        color: "#111111"
         border.width: 1
-        border.color: Appearance.colors.colLayer0Border
-        radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
+        border.color: "#4c7899"
+        radius: 0
 
         ColumnLayout {
             anchors.fill: parent
@@ -213,7 +214,9 @@ Item {
             color: Appearance.colors.colLayer1
             radius: 0
             implicitWidth: uptimeRow.implicitWidth + 24
-            implicitHeight: uptimeRow.implicitHeight + 8
+            implicitHeight: uptimeRow.implicitHeight + 10
+            border.width: 1
+            border.color: "#333333"
             
             Row {
                 id: uptimeRow
@@ -246,7 +249,8 @@ Item {
                 right: parent.right
             }
             color: Appearance.colors.colLayer1
-            padding: 4
+            padding: 0
+            spacing: 4
 
             QuickToggleButton {
                 toggled: root.editMode

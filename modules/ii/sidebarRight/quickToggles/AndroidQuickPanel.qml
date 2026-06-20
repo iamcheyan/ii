@@ -19,14 +19,14 @@ AbstractQuickPanel {
         animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
     }
     property real spacing: 6
-    property real padding: 6
+    property real padding: 0
     readonly property real baseCellWidth: {
         // This is the wrong calculation, but it looks correct in reality???
         // (theoretically spacing should be multiplied by 1 column less)
         const availableWidth = root.width - (root.padding * 2) - (root.spacing * (root.columns))
         return availableWidth / root.columns
     }
-    readonly property real baseCellHeight: 56
+    readonly property real baseCellHeight: 54
 
     // Toggles
     readonly property list<string> availableToggleTypes: ["network", "bluetooth", "idleInhibitor", "easyEffects", "nightLight", "darkMode", "cloudflareWarp", "gameMode", "screenSnip", "colorPicker", "onScreenKeyboard", "mic", "audio", "notifications", "powerProfile","musicRecognition", "antiFlashbang"]
@@ -65,7 +65,7 @@ AbstractQuickPanel {
             fill: parent
             margins: root.padding
         }
-        spacing: 12
+        spacing: 8
         
         Column {
             id: usedRows

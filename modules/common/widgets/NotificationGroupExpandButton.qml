@@ -15,10 +15,13 @@ RippleButton { // Expand button
     Layout.alignment: Qt.AlignVCenter
     Layout.fillHeight: false
 
-    buttonRadius: Appearance.rounding.full
-    colBackground: ColorUtils.mix(Appearance?.colors.colLayer2, Appearance?.colors.colLayer2Hover, 0.5)
-    colBackgroundHover: Appearance?.colors.colLayer2Hover ?? "#E5DFED"
-    colRipple: Appearance?.colors.colLayer2Active ?? "#D6CEE2"
+    buttonRadius: 0
+    buttonRadiusPressed: 0
+    colBackground: "#252525"
+    colBackgroundHover: "#303030"
+    colRipple: "#3a3a3a"
+    borderWidth: 1
+    borderColor: "#363636"
 
     contentItem: Item {
         anchors.centerIn: parent

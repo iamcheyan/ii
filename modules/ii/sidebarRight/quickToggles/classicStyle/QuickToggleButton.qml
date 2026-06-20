@@ -5,12 +5,21 @@ import QtQuick
 GroupButton {
     id: button
     property string buttonIcon
-    baseWidth: 40
-    baseHeight: 40
-    clickedWidth: baseWidth + 20
+    baseWidth: 38
+    baseHeight: 38
+    clickedWidth: baseWidth
+    bounce: false
     toggled: false
-    buttonRadius: (altAction && toggled) ? Appearance?.rounding.normal : Math.min(baseHeight, baseWidth) / 2
-    buttonRadiusPressed: Appearance?.rounding?.small
+    buttonRadius: 0
+    buttonRadiusPressed: 0
+    colBackground: "#1d1d1d"
+    colBackgroundHover: "#252525"
+    colBackgroundActive: "#303030"
+    colBackgroundToggled: "#285577"
+    colBackgroundToggledHover: "#34658b"
+    colBackgroundToggledActive: "#1f425d"
+    borderWidth: 1
+    borderColor: toggled ? "#4c7899" : "#333333"
 
     contentItem: MaterialSymbol {
         anchors.centerIn: parent

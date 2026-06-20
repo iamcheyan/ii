@@ -42,6 +42,8 @@ Button {
     property color colBackgroundToggled: Appearance?.colors.colPrimary ?? "#65558F"
     property color colBackgroundToggledHover: Appearance?.colors.colPrimaryHover ?? "#77699C"
     property color colBackgroundToggledActive: Appearance?.colors.colPrimaryActive ?? "#D6CEE2"
+    property int borderWidth: 0
+    property color borderColor: Appearance?.colors.colOutlineVariant ?? "#49464a"
 
     property real radius: root.down ? root.buttonRadiusPressed : root.buttonRadius
     property real leftRadius: root.down ? root.buttonRadiusPressed : root.buttonRadius
@@ -131,8 +133,8 @@ Button {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
-        border.width: root.tabbedTo ? 2 : 0
-        border.color: Appearance.colors.colSecondary
+        border.width: root.tabbedTo ? 2 : root.borderWidth
+        border.color: root.tabbedTo ? Appearance.colors.colSecondary : root.borderColor
     }
 
     contentItem: StyledText {
