@@ -171,6 +171,10 @@ Scope {
         Qt.callLater(overviewScope.syncOverviewScreen);
     }
 
+    function setAltTabSubmap(active) {
+        Hyprland.dispatch(`hl.dsp.submap("${active ? "overview-alt-tab" : "reset"}")`);
+    }
+
     function cycleAltTabWorkspace(dir) {
         const list = overviewScope.workspaceCycleList();
         if (list.length === 0)
@@ -199,6 +203,7 @@ Scope {
             GlobalStates.overviewAltTabOriginalWorkspaceId = currentWs;
             GlobalStates.overviewAltTabSelectedWorkspaceId = currentWs;
             GlobalStates.overviewOpen = true;
+            overviewScope.setAltTabSubmap(true);
             Qt.callLater(() => overviewScope.cycleAltTabWorkspace(dir));
         }
 
@@ -215,20 +220,24 @@ Scope {
     }
 
     function commitAltTab() {
-        if (!GlobalStates.overviewAltTabMode)
+        if (!GlobalStates.overviewAltTabMode) {
+            overviewScope.setAltTabSubmap(false);
             return;
+        }
         const selected = GlobalStates.overviewAltTabSelectedWorkspaceId;
         const isTrailing = selected > 0 && HyprlandData.workspaceById[selected] === undefined;
         GlobalStates.overviewAltTabMode = false;
         GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
         GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
         GlobalStates.overviewOpen = false;
+        overviewScope.setAltTabSubmap(false);
         if (isTrailing)
             Hyprland.dispatch(`hl.dsp.focus({ workspace = "empty" })`);
     }
 
     function cancelAltTab() {
         if (!GlobalStates.overviewAltTabMode) {
+            overviewScope.setAltTabSubmap(false);
             GlobalStates.overviewOpen = false;
             return;
         }
@@ -237,6 +246,7 @@ Scope {
         GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
         GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
         GlobalStates.overviewOpen = false;
+        overviewScope.setAltTabSubmap(false);
         if (originalWs > 0)
             overviewScope.dispatchFocusWorkspace(originalWs);
     }
@@ -317,6 +327,7 @@ Scope {
             target: GlobalStates
             function onOverviewOpenChanged() {
                 if (!GlobalStates.overviewOpen) {
+                    overviewScope.setAltTabSubmap(false);
                     GlobalStates.overviewAltTabMode = false;
                     GlobalStates.overviewAltTabOriginalWorkspaceId = -1;
                     GlobalStates.overviewAltTabSelectedWorkspaceId = -1;
@@ -577,6 +588,14 @@ Scope {
 
         onPressed: {
             overviewScope.commitAltTab();
+        }
+    }
+    GlobalShortcut {
+        name: "overviewAltTabCancel"
+        description: "Alt+Tab workspace overview: cancel"
+
+        onPressed: {
+            overviewScope.cancelAltTab();
         }
     }
     GlobalShortcut {
