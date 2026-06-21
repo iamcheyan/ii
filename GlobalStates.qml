@@ -32,6 +32,12 @@ Singleton {
     property bool barDialogOpen: false
     property string barDialogType: ""
 
+    onOverviewOpenChanged: {
+        if (GlobalStates.overviewOpen) {
+            GlobalStates.appLauncherOpen = false;
+        }
+    }
+
     onSidebarRightOpenChanged: {
         if (GlobalStates.sidebarRightOpen) {
             Notifications.timeoutAll();
